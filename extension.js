@@ -66,7 +66,7 @@ async function render(ext, webview, step) {
       : l.error ? `<span class="broken">${esc(l.title)} — ${esc(l.error)}</span>`
       : `<a href="#" data-file="${i}" data-section="${esc(s.id)}">${esc(l.title)}</a>`;
     // ссылки на ненастроенные документы скрыты; ссылки проектных разделов — объекты, фильтр их не трогает
-    const links = настройки.ссылки(s.links, get);
+    const links = настройки.ссылки(s.links, get, ext);
     if (links && links.length) html += '<p class="links">' + links.map(link).join(' · ') + '</p>';
     for (const f of s.figs || []) {
       html += `<figure><h2>${esc(f.title)}</h2><div class="scroll">${read(f.svg)}</div>` +
@@ -184,8 +184,8 @@ function openInBrowser(p) {
 function openFile(p) { return vscode.commands.executeCommand('vscode.open', vscode.Uri.file(p)); }
 
 // Документ по команде: путь из настроек; не настроен — подсказка вместо ошибки.
-function openDoc(cmd, open) {
-  const p = настройки.путь(cmd, get);
+function openDoc(ext, cmd, open) {
+  const p = настройки.путь(cmd, get, ext);
   if (!p) return vscode.window.showInformationMessage(настройки.подсказка(cmd));
   return open(p);
 }
@@ -205,11 +205,11 @@ function activate(context) {
   const ext = context.extensionPath;
   context.subscriptions.push(
     vscode.commands.registerCommand('cycleWelcome.show', () => show(ext)),
-    vscode.commands.registerCommand('cycleWelcome.openDashboard', () => openDoc('cycleWelcome.openDashboard', openInBrowser)),
-    vscode.commands.registerCommand('cycleWelcome.openReadme', () => openDoc('cycleWelcome.openReadme', openFile)),
-    vscode.commands.registerCommand('cycleWelcome.openRepos', () => openDoc('cycleWelcome.openRepos', preview)),
+    vscode.commands.registerCommand('cycleWelcome.openDashboard', () => openDoc(ext, 'cycleWelcome.openDashboard', openInBrowser)),
+    vscode.commands.registerCommand('cycleWelcome.openReadme', () => openDoc(ext, 'cycleWelcome.openReadme', openFile)),
+    vscode.commands.registerCommand('cycleWelcome.openRepos', () => openDoc(ext, 'cycleWelcome.openRepos', preview)),
     vscode.commands.registerCommand('cycleWelcome.openProjectFile', openProjectFile),
-    vscode.commands.registerCommand('cycleWelcome.openPlan', () => openDoc('cycleWelcome.openPlan', openFile)),
+    vscode.commands.registerCommand('cycleWelcome.openPlan', () => openDoc(ext, 'cycleWelcome.openPlan', openFile)),
     // Перенос в другую группу, отдельное окно, перезапуск VS Code: вкладка пересоздаётся на том же пункте.
     vscode.window.registerWebviewPanelSerializer(VIEW, {
       async deserializeWebviewPanel(p, state) {

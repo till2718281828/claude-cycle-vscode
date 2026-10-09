@@ -34,6 +34,7 @@ test('настройки документов объявлены в package.json
     const p = props['cycleWelcome.' + d.ключ];
     assert.ok(p, `нет настройки cycleWelcome.${d.ключ}`);
     assert.strictEqual(p.default, '', `cycleWelcome.${d.ключ}: значение по умолчанию не пустое`);
+    if (d.встроенный) assert.ok(fs.existsSync(path.join(корень, d.встроенный)), `нет встроенного ${d.встроенный}`);
   }
 });
 

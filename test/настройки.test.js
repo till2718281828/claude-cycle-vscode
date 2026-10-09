@@ -29,6 +29,13 @@ test('пробелы вокруг значения не считаются пу�
   assert.strictEqual(н.путь('cycleWelcome.openRepos', из({ reposDoc: '   ' })), '');
 });
 
+test('карта репозиториев без настройки — встроенный пример из папки расширения', () => {
+  const ext = path.resolve('/расширение');
+  assert.strictEqual(н.путь('cycleWelcome.openRepos', из({}), ext), path.join(ext, 'docs', 'repos.md'));
+  assert.strictEqual(н.путь('cycleWelcome.openReadme', из({}), ext), '', 'у README встроенного нет');
+  assert.deepStrictEqual(н.ссылки([['Карта', 'cycleWelcome.openRepos']], из({}), ext), [['Карта', 'cycleWelcome.openRepos']]);
+});
+
 test('подсказка называет настройку', () => {
   assert.match(н.подсказка('cycleWelcome.openReadme'), /cycleWelcome\.readmePath/);
   assert.match(н.подсказка('cycleWelcome.openDashboard'), /cycleWelcome\.projectsRoot/);

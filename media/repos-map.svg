@@ -1,3 +1,103 @@
-<svg viewBox="0 0 1000 200" role="img" aria-label="Потоки данных" xmlns="http://www.w3.org/2000/svg">
-  <text x="500" y="105" text-anchor="middle" font-size="16" fill="var(--muted)">Потоки данных: схема появится в следующей версии</text>
+<svg viewBox="0 0 1000 540" role="img" aria-label="Демо-пример СтальКонструкт-Демо, потоки данных между репозиториями: учётная система и банк-клиент питают справочники и снимки учёта; из них собирается отчёт CFO; слепая проверка пересчитывает его из тех же снимков; выпуск уходит CFO и совету директоров; замечания разбираются и становятся правилами отчёта и проверки." xmlns="http://www.w3.org/2000/svg">
+  <!-- Демо-пример на вымышленной компании; правится руками. Цвета — CSS-переменные вкладки (extension.js). -->
+  <defs>
+    <marker id="rh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink)"/></marker>
+    <marker id="rha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/></marker>
+    <marker id="rhs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--stop)"/></marker>
+  </defs>
+  <!-- дорожки -->
+  <rect x="0" y="40" width="1000" height="100" fill="var(--lane)"/>
+  <rect x="0" y="140" width="1000" height="100" fill="var(--surface)"/>
+  <rect x="0" y="240" width="1000" height="100" fill="var(--lane)"/>
+  <rect x="0" y="340" width="1000" height="100" fill="var(--accent-soft)"/>
+  <rect x="0" y="440" width="1000" height="100" fill="var(--check-soft)"/>
+  <g stroke="var(--line)" stroke-width="1"><line x1="0" y1="140" x2="1000" y2="140"/><line x1="0" y1="240" x2="1000" y2="240"/><line x1="0" y1="340" x2="1000" y2="340"/><line x1="0" y1="440" x2="1000" y2="440"/><line x1="140" y1="40" x2="140" y2="540"/></g>
+  <g fill="var(--ink)" font-size="13" font-weight="600">
+    <text x="12" y="86">Источники</text>
+    <text x="12" y="186">Данные</text>
+    <text x="12" y="286">Отчёт и проверка</text>
+    <text x="12" y="386">Получатели</text>
+    <text x="12" y="486">Обратная связь</text>
+  </g>
+  <g fill="var(--muted)" font-size="11">
+    <text x="12" y="102">внешние системы</text>
+    <text x="12" y="202">только чтение,</text><text x="12" y="216">по ссылке</text>
+    <text x="12" y="302">разные исполнители</text>
+    <text x="12" y="402">выпуск за месяц</text>
+    <text x="12" y="502">замечание → правило</text>
+  </g>
+  <text x="570" y="24" text-anchor="middle" fill="var(--muted)" font-size="11" font-weight="600" letter-spacing=".06em">ДЕМО · СТАЛЬКОНСТРУКТ-ДЕМО</text>
+
+  <!-- данные: сплошные -->
+  <g fill="none" stroke="var(--ink)" stroke-width="1.5">
+    <path d="M280 122 V154" marker-end="url(#rh)"/>
+    <path d="M330 122 V134 H680 V154" marker-end="url(#rh)"/>
+    <path d="M720 122 V154" marker-end="url(#rh)"/>
+    <path d="M250 222 V254" marker-end="url(#rh)"/>
+    <path d="M640 222 V240 H330 V254" marker-end="url(#rh)"/>
+    <path d="M720 222 V254" marker-end="url(#rh)"/>
+    <path d="M362 280 H616" marker-end="url(#rh)"/>
+    <path d="M300 322 V390 H406" marker-end="url(#rh)"/>
+    <path d="M490 422 V454" marker-end="url(#rh)"/>
+  </g>
+  <path d="M618 304 H364" fill="none" stroke="var(--stop)" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#rhs)"/>
+  <!-- правила: пунктир -->
+  <g fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="2 4">
+    <path d="M410 490 H170 V300 H196" marker-end="url(#rha)"/>
+    <path d="M570 490 H700 V326" marker-end="url(#rha)"/>
+  </g>
+  <g font-size="11" fill="var(--muted)">
+    <text x="286" y="143">план счетов</text>
+    <text x="505" y="128" text-anchor="middle">проводки, ночью</text>
+    <text x="726" y="143">выписки</text>
+    <text x="256" y="243">маппинг</text>
+    <text x="485" y="234" text-anchor="middle">снимок месяца</text>
+    <text x="726" y="243">те же снимки</text>
+    <text x="489" y="274" text-anchor="middle">выпуск</text>
+    <text x="489" y="320" text-anchor="middle" fill="var(--stop)">расхождение → правка</text>
+    <text x="306" y="372">выпуск</text>
+    <text x="496" y="445">замечания</text>
+    <text x="180" y="482" fill="var(--accent)">правило → чек-лист</text>
+    <text x="706" y="470" fill="var(--accent)">правило проверки</text>
+  </g>
+
+  <!-- узлы -->
+  <g font-size="13" text-anchor="middle">
+    <rect x="200" y="58" width="160" height="64" rx="5" fill="var(--surface)" stroke="var(--muted)" stroke-dasharray="3 3"/>
+    <text x="280" y="84" font-weight="600" fill="var(--ink)">Учётная система</text>
+    <text x="280" y="102" font-size="11" fill="var(--muted)">проводки, остатки</text>
+
+    <rect x="620" y="58" width="160" height="64" rx="5" fill="var(--surface)" stroke="var(--muted)" stroke-dasharray="3 3"/>
+    <text x="700" y="84" font-weight="600" fill="var(--ink)">Банк-клиент</text>
+    <text x="700" y="102" font-size="11" fill="var(--muted)">выписки за день</text>
+
+    <rect x="200" y="158" width="160" height="64" rx="5" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.2"/>
+    <text x="280" y="178" font-weight="600" fill="var(--ink)">Справочники</text>
+    <text x="280" y="194" font-size="10.5" fill="var(--muted)" class="mono">nsi</text>
+    <text x="280" y="210" font-size="11" fill="var(--muted)">статьи, маппинг счетов</text>
+
+    <rect x="620" y="158" width="160" height="64" rx="5" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.2"/>
+    <text x="700" y="178" font-weight="600" fill="var(--ink)">Снимки учёта</text>
+    <text x="700" y="194" font-size="10.5" fill="var(--muted)" class="mono">ledger-snapshots</text>
+    <text x="700" y="210" font-size="11" fill="var(--muted)">месяц + SHA-256</text>
+
+    <rect x="200" y="258" width="160" height="64" rx="5" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.5"/>
+    <text x="280" y="278" font-weight="600" fill="var(--accent)">Отчёт CFO</text>
+    <text x="280" y="294" font-size="10.5" fill="var(--muted)" class="mono">reporting</text>
+    <text x="280" y="310" font-size="11" fill="var(--muted)">P&amp;L, реестр чисел</text>
+
+    <rect x="620" y="258" width="160" height="64" rx="5" fill="var(--surface)" stroke="var(--check)" stroke-width="1.5"/>
+    <text x="700" y="278" font-weight="600" fill="var(--check)">Слепая проверка</text>
+    <text x="700" y="294" font-size="10.5" fill="var(--muted)" class="mono">verifier</text>
+    <text x="700" y="310" font-size="11" fill="var(--muted)">пересчёт, код не читает</text>
+
+    <rect x="410" y="358" width="160" height="64" rx="5" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.2"/>
+    <text x="490" y="386" font-weight="600" fill="var(--ink)">CFO, совет</text>
+    <text x="490" y="404" font-weight="600" fill="var(--ink)">директоров</text>
+
+    <rect x="410" y="458" width="160" height="64" rx="5" fill="var(--surface)" stroke="var(--check)" stroke-width="1.5"/>
+    <text x="490" y="478" font-weight="600" fill="var(--check)">Замечания</text>
+    <text x="490" y="494" font-size="10.5" fill="var(--muted)" class="mono">review-notes</text>
+    <text x="490" y="510" font-size="11" fill="var(--muted)">разбор, вердикт</text>
+  </g>
 </svg>

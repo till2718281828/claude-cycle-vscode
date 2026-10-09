@@ -3,20 +3,21 @@
 // Модуль без зависимости от vscode — его покрывают тесты test/*.test.js (node --test).
 const path = require('path');
 
-// команда → настройка; файл — имя файла в папке из настройки (пульт лежит в папке проектов)
+// команда → настройка; файл — имя файла в папке из настройки (пульт лежит в папке проектов);
+// встроенный — документ из поставки расширения, если настройка пуста
 const ДОКУМЕНТЫ = {
   'cycleWelcome.openDashboard': { ключ: 'projectsRoot', файл: 'пульт.html', что: 'папку проектов, где лежит пульт.html' },
   'cycleWelcome.openReadme': { ключ: 'readmePath', что: 'путь к README плагина' },
   'cycleWelcome.openPlan': { ключ: 'planPath', что: 'путь к плану цикла' },
-  'cycleWelcome.openRepos': { ключ: 'reposDoc', что: 'путь к карте репозиториев' }
+  'cycleWelcome.openRepos': { ключ: 'reposDoc', встроенный: 'docs/repos.md', что: 'путь к карте репозиториев' }
 };
 
-// get(ключ) → значение настройки. Относительный путь — от папки проектов; без неё документа нет.
-function путь(команда, get) {
+// get(ключ) → значение настройки, ext — папка расширения. Относительный путь — от папки проектов; без неё документа нет.
+function путь(команда, get, ext = '') {
   const d = ДОКУМЕНТЫ[команда];
   if (!d) return '';
   const v = String(get(d.ключ) || '').trim();
-  if (!v) return '';
+  if (!v) return d.встроенный && ext ? path.join(ext, d.встроенный) : '';
   if (d.файл) return path.join(v, d.файл);
   if (path.isAbsolute(v)) return v;
   const root = String(get('projectsRoot') || '').trim();
@@ -29,9 +30,9 @@ function подсказка(команда) {
 }
 
 // Ссылки раздела без ссылок на ненастроенные документы; исходный список не меняется.
-function ссылки(links, get) {
+function ссылки(links, get, ext = '') {
   if (!links) return links;
-  return links.filter(l => !(Array.isArray(l) && ДОКУМЕНТЫ[l[1]] && !путь(l[1], get)));
+  return links.filter(l => !(Array.isArray(l) && ДОКУМЕНТЫ[l[1]] && !путь(l[1], get, ext)));
 }
 
 module.exports = { ДОКУМЕНТЫ, путь, подсказка, ссылки };
