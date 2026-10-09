@@ -60,13 +60,16 @@ async function render(ext, webview, step) {
     const read = f => fs.readFileSync(s.project ? f : path.join(ext, 'media', f), 'utf8');
     const src = s.attention ? сводка.раздел(root(), fs.readFileSync) : s.md ? read(s.md) : s.text;
     let html = await md(src);
-    // ссылка: [текст, команда] у встроенных; {title, step} — переход к разделу вкладки; {title, file} — файл проекта по номеру
+    // ссылка: [текст, команда] у встроенных; {title, step} — переход к разделу вкладки; {title, file} — файл проекта по номеру;
+    // {title, user} — своя ссылка из cycleWelcome.links по номеру
     const link = (l, i) => Array.isArray(l) ? `<a href="#" data-cmd="${l[1]}">${esc(l[0])}</a>`
       : l.step ? `<a href="#" data-step-link="${esc(l.step)}">${esc(l.title)}</a>`
       : l.error ? `<span class="broken">${esc(l.title)} — ${esc(l.error)}</span>`
+      : l.user !== undefined ? `<a href="#" data-user-link="${l.user}">${esc(l.title)}</a>`
       : `<a href="#" data-file="${i}" data-section="${esc(s.id)}">${esc(l.title)}</a>`;
     // ссылки на ненастроенные документы скрыты; ссылки проектных разделов — объекты, фильтр их не трогает
-    const links = настройки.ссылки(s.links, get, ext);
+    const links = (настройки.ссылки(s.links, get, ext) || [])
+      .concat(s.userLinks ? настройки.своиСсылки(get).map((l, i) => ({ title: l.title, user: i })) : []);
     if (links && links.length) html += '<p class="links">' + links.map(link).join(' · ') + '</p>';
     for (const f of s.figs || []) {
       html += `<figure><h2>${esc(f.title)}</h2><div class="scroll">${read(f.svg)}</div>` +
@@ -136,6 +139,9 @@ async function render(ext, webview, step) {
   document.querySelectorAll('a[data-file]').forEach(a => a.onclick = e => {
     e.preventDefault(); api.postMessage({ cmd: 'cycleWelcome.openProjectFile', args: [a.dataset.section, Number(a.dataset.file)] });
   });
+  document.querySelectorAll('a[data-user-link]').forEach(a => a.onclick = e => {
+    e.preventDefault(); api.postMessage({ cmd: 'cycleWelcome.openLink', args: [Number(a.dataset.userLink)] });
+  });
   go(st.step);
 </script></body></html>`;
 }
@@ -143,10 +149,12 @@ async function render(ext, webview, step) {
 async function setup(ext, p, step) {
   panel = p;
   p.onDidDispose(() => { if (panel === p) panel = undefined; });
-  // аргументы из webview — только у openProjectFile (id раздела и номер ссылки), остальные команды их не получают
+  // аргументы из webview — только номера ссылок: у openProjectFile (id раздела и номер), у openLink (номер);
+  // пути берутся из настроек и описаний разделов, не из webview; остальные команды аргументов не получают
   p.webview.onDidReceiveMessage(m => {
     if (!ALLOWED.has(m && m.cmd)) return;
-    const args = m.cmd === 'cycleWelcome.openProjectFile' && Array.isArray(m.args) ? m.args.slice(0, 2) : [];
+    const n = { 'cycleWelcome.openProjectFile': 2, 'cycleWelcome.openLink': 1 }[m.cmd] || 0;
+    const args = n && Array.isArray(m.args) ? m.args.slice(0, n) : [];
     vscode.commands.executeCommand(m.cmd, ...args);
   });
   p.webview.html = await render(ext, p.webview, step);
@@ -196,9 +204,15 @@ function openProjectFile(sectionId, i) {
   const s = steps.find(x => x.project && x.id === sectionId);
   const l = s && s.links && s.links[i];
   if (!l || !l.file) return;
-  return /\.md$/i.test(l.file)
-    ? vscode.commands.executeCommand('markdown.showPreview', vscode.Uri.file(l.file))
-    : openFile(l.file);
+  return /\.md$/i.test(l.file) ? preview(l.file) : openFile(l.file);
+}
+
+// Своя ссылка — по номеру в cycleWelcome.links: путь читается из настроек заново, не из webview.
+function openLink(i) {
+  const l = настройки.своиСсылки(get)[i];
+  if (!l) return;
+  if (!fs.existsSync(l.путь)) return vscode.window.showWarningMessage(`Нет файла: ${l.путь}`);
+  return /\.md$/i.test(l.путь) ? preview(l.путь) : openFile(l.путь);
 }
 
 function activate(context) {
@@ -206,10 +220,9 @@ function activate(context) {
   context.subscriptions.push(
     vscode.commands.registerCommand('cycleWelcome.show', () => show(ext)),
     vscode.commands.registerCommand('cycleWelcome.openDashboard', () => openDoc(ext, 'cycleWelcome.openDashboard', openInBrowser)),
-    vscode.commands.registerCommand('cycleWelcome.openReadme', () => openDoc(ext, 'cycleWelcome.openReadme', openFile)),
     vscode.commands.registerCommand('cycleWelcome.openRepos', () => openDoc(ext, 'cycleWelcome.openRepos', preview)),
     vscode.commands.registerCommand('cycleWelcome.openProjectFile', openProjectFile),
-    vscode.commands.registerCommand('cycleWelcome.openPlan', () => openDoc(ext, 'cycleWelcome.openPlan', openFile)),
+    vscode.commands.registerCommand('cycleWelcome.openLink', openLink),
     // Перенос в другую группу, отдельное окно, перезапуск VS Code: вкладка пересоздаётся на том же пункте.
     vscode.window.registerWebviewPanelSerializer(VIEW, {
       async deserializeWebviewPanel(p, state) {

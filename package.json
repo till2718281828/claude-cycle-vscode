@@ -24,7 +24,7 @@
     "untrustedWorkspaces": {
       "supported": "limited",
       "description": "В режиме ограниченного доступа настройки путей и проектных разделов берутся только из пользовательских настроек, не из папки проекта.",
-      "restrictedConfigurations": ["cycleWelcome.projectSections", "cycleWelcome.projectsRoot", "cycleWelcome.readmePath", "cycleWelcome.planPath", "cycleWelcome.reposDoc"]
+      "restrictedConfigurations": ["cycleWelcome.projectSections", "cycleWelcome.projectsRoot", "cycleWelcome.links"]
     }
   },
   "activationEvents": [
@@ -40,14 +40,6 @@
       {
         "command": "cycleWelcome.openDashboard",
         "title": "Цикл: открыть пульт"
-      },
-      {
-        "command": "cycleWelcome.openReadme",
-        "title": "Цикл: README плагина"
-      },
-      {
-        "command": "cycleWelcome.openPlan",
-        "title": "Цикл: план цикла"
       },
       {
         "command": "cycleWelcome.openRepos",
@@ -72,22 +64,20 @@
         "cycleWelcome.projectsRoot": {
           "type": "string",
           "default": "",
-          "description": "Папка проектов: там лежат пульт.html и пульт-сводка.json; от неё считаются относительные пути документов. Пусто — пульта нет."
+          "description": "Папка проектов: там лежат пульт.html и пульт-сводка.json; от неё считаются относительные пути своих ссылок. Пусто — пульта нет, в «Требует внимания» — демо."
         },
-        "cycleWelcome.readmePath": {
-          "type": "string",
-          "default": "",
-          "description": "README плагина цикла: абсолютный путь или путь от папки проектов. Пусто — ссылки нет."
-        },
-        "cycleWelcome.planPath": {
-          "type": "string",
-          "default": "",
-          "description": "План цикла (решения по процессу): абсолютный путь или путь от папки проектов. Пусто — ссылки нет."
-        },
-        "cycleWelcome.reposDoc": {
-          "type": "string",
-          "default": "",
-          "description": "Карта репозиториев (Markdown, открывается в предпросмотре): абсолютный путь или путь от папки проектов. Пусто — встроенный демо-пример."
+        "cycleWelcome.links": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": { "type": "string", "description": "Название ссылки на вкладке." },
+              "path": { "type": "string", "description": "Абсолютный путь или путь от папки проектов. Markdown открывается в предпросмотре." }
+            },
+            "required": ["title", "path"]
+          },
+          "description": "Свои документы в разделе «Пульт и документы»: список {\"title\", \"path\"}. Пусто — только встроенные ссылки."
         }
       }
     }

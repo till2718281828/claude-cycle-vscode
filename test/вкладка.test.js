@@ -24,18 +24,27 @@ test('команды ссылок разрешены и объявлены в pa
       assert.ok(объявлены.has(l[1]), `${s.id}: ${l[1]} нет в package.json`);
     }
   }
-  // openProjectFile — служебная: вызывается только из webview с аргументами, в палитре команд её нет
-  for (const к of ALLOWED) if (к !== 'cycleWelcome.openProjectFile') assert.ok(объявлены.has(к), `${к} нет в package.json`);
+  // openProjectFile и openLink — служебные: вызываются только из webview с номером ссылки, в палитре их нет
+  for (const к of ALLOWED) if (!['cycleWelcome.openProjectFile', 'cycleWelcome.openLink'].includes(к)) assert.ok(объявлены.has(к), `${к} нет в package.json`);
 });
 
 test('настройки документов объявлены в package.json с пустым значением по умолчанию', () => {
   const props = pkg.contributes.configuration.properties;
   for (const d of Object.values(require('../настройки.js').ДОКУМЕНТЫ)) {
+    if (d.встроенный) assert.ok(fs.existsSync(path.join(корень, d.встроенный)), `нет встроенного ${d.встроенный}`);
+    if (!d.ключ) continue;
     const p = props['cycleWelcome.' + d.ключ];
     assert.ok(p, `нет настройки cycleWelcome.${d.ключ}`);
     assert.strictEqual(p.default, '', `cycleWelcome.${d.ключ}: значение по умолчанию не пустое`);
-    if (d.встроенный) assert.ok(fs.existsSync(path.join(корень, d.встроенный)), `нет встроенного ${d.встроенный}`);
   }
+  assert.deepStrictEqual(props['cycleWelcome.links'] && props['cycleWelcome.links'].default, [], 'cycleWelcome.links — пустой список');
+});
+
+test('в режиме ограниченного доступа все настройки путей — только пользовательские', () => {
+  const ограничены = new Set(pkg.capabilities.untrustedWorkspaces.restrictedConfigurations);
+  for (const k of ['cycleWelcome.projectsRoot', 'cycleWelcome.links', 'cycleWelcome.projectSections']) assert.ok(ограничены.has(k), k);
+  const props = pkg.contributes.configuration.properties;
+  for (const k of ограничены) assert.ok(props[k], `${k} не объявлена`);
 });
 
 // Шаблоны собраны из частей, чтобы тест не находил сам себя

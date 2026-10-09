@@ -21,7 +21,7 @@ const STEPS = [
   {
     id: 'repos', title: 'Репозитории',
     text: '# Репозитории\n\nКакой репозиторий что хранит, откуда берёт и кому отдаёт. Пример — вымышленная компания ' +
-      'СтальКонструкт-Демо; свою карту можно подключить настройкой `cycleWelcome.reposDoc`.',
+      'СтальКонструкт-Демо; ссылку на свою карту можно добавить в «Пульт и документы» настройкой `cycleWelcome.links`.',
     links: [['Подробнее: таблица и схемы', 'cycleWelcome.openRepos']],
     figs: [{
       svg: 'repos-map.svg', title: 'Потоки данных', legend: 'map',
@@ -44,11 +44,11 @@ const STEPS = [
   { id: 'attention', title: 'Требует внимания', attention: true, links: [['Открыть пульт', 'cycleWelcome.openDashboard']] },
   {
     id: 'links', title: 'Пульт и документы', md: 'links.md',
-    links: [['Открыть пульт', 'cycleWelcome.openDashboard'], ['README плагина', 'cycleWelcome.openReadme'],
-      ['План цикла', 'cycleWelcome.openPlan'], ['Карта репозиториев', 'cycleWelcome.openRepos']]
+    links: [['Открыть пульт', 'cycleWelcome.openDashboard'], ['Карта репозиториев', 'cycleWelcome.openRepos']],
+    userLinks: true   // плюс свои ссылки из настройки cycleWelcome.links
   }
 ];
-const ALLOWED = new Set(['cycleWelcome.openDashboard', 'cycleWelcome.openReadme', 'cycleWelcome.openPlan', 'cycleWelcome.openRepos',
-  'cycleWelcome.openProjectFile']);
+const ALLOWED = new Set(['cycleWelcome.openDashboard', 'cycleWelcome.openRepos',
+  'cycleWelcome.openProjectFile', 'cycleWelcome.openLink']);
 
 module.exports = { STEPS, ALLOWED };
