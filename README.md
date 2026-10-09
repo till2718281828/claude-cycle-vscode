@@ -5,8 +5,8 @@
 [Что работает сразу](#что-работает-сразу) · [Установка](#установка) · [Настройки](#настройки) · [Сводка пульта](docs/pult-summary.md) · [English](#english)
 
 Система внутреннего контроля финансовой службы — регламент, разделение исполнителя и проверяющего,
-след каждого решения — перенесённая на работу с AI-агентами и вынесенная на экран. Я финансовый директор;
-по этому регламенту я каждый день ставлю задачи Claude Code и принимаю результат.
+след каждого решения — перенесённая на работу с AI-агентами и вынесенная на экран. По этому регламенту
+я каждый день ставлю задачи Claude Code и принимаю результат.
 
 Технически это расширение VS Code: в каждом новом окне оно открывает вкладку «Цикл работы». На ней видно,
 по каким фазам идёт задача, где решает человек, где агент обязан остановиться, кто проверяет результат и
@@ -60,7 +60,7 @@ AI-агент похож на сильного новичка: работает 
 
 ## Из практики
 
-Вкладкой я пользуюсь каждый день в работе финансовым директором группы компаний. По этому циклу у меня
+Вкладкой я пользуюсь каждый день в работе финансовой службы группы компаний. По этому циклу у меня
 идут задачи в разных проектах: регулярная отчётность наверх, расчёты, внутренние инструменты. В рабочей
 версии на вкладке схемы моего контура; здесь они заменены демо-примером, механизм тот же.
 
@@ -185,7 +185,7 @@ JSON не найден или сломан — раздел показывает
 
 **"Work cycle": internal control for working with an AI agent.** A finance function's internal control —
 a protocol, segregation of the doer and the reviewer, an audit trail of every decision — applied to AI
-agents and put on screen. I am a CFO and I run my daily work with Claude Code by this protocol.
+agents and put on screen. I run my daily work with Claude Code by this protocol.
 
 Technically, it is a VS Code extension that opens a "Work cycle" tab in every new window: the phases of a
 task (discovery → questions to the requester → plan → step-by-step execution → independent review →
@@ -202,6 +202,6 @@ Install: download the `.vsix` from Releases and run `code --install-extension cl
 
 ---
 
-Владимир Лобанов, финансовый директор · [профиль на GitHub](https://github.com/till2718281828) ·
+Владимир Лобанов · [профиль на GitHub](https://github.com/till2718281828) ·
 пример работы этим циклом — [ai-management-reporting](https://github.com/till2718281828/ai-management-reporting) ·
 лицензия MIT.
