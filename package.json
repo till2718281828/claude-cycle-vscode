@@ -61,7 +61,22 @@
         "cycleWelcome.projectsRoot": {
           "type": "string",
           "default": "",
-          "description": "Папка проектов: там лежат пульт.html и пульт-сводка.json."
+          "description": "Папка проектов: там лежат пульт.html и пульт-сводка.json; от неё считаются относительные пути документов. Пусто — пульта нет."
+        },
+        "cycleWelcome.readmePath": {
+          "type": "string",
+          "default": "",
+          "description": "README плагина цикла: абсолютный путь или путь от папки проектов. Пусто — ссылки нет."
+        },
+        "cycleWelcome.planPath": {
+          "type": "string",
+          "default": "",
+          "description": "План цикла (решения по процессу): абсолютный путь или путь от папки проектов. Пусто — ссылки нет."
+        },
+        "cycleWelcome.reposDoc": {
+          "type": "string",
+          "default": "",
+          "description": "Карта репозиториев (Markdown, открывается в предпросмотре): абсолютный путь или путь от папки проектов. Пусто — ссылки нет."
         }
       }
     }

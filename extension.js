@@ -5,58 +5,14 @@ const vscode = require('vscode');
 const fs = require('fs');
 const path = require('path');
 const разделы = require('./проектные-разделы.js');
+const настройки = require('./настройки.js');
+const { STEPS, ALLOWED } = require('./встроенные-разделы.js');
 
 const VIEW = 'cycleWelcome.panel';
 const TITLE = 'Цикл работы';
 const cfg = () => vscode.workspace.getConfiguration('cycleWelcome');
 const root = () => cfg().get('projectsRoot') || '';
-
-// Порядок пунктов = порядок в списке слева; первым открывается «Команды».
-const STEPS = [
-  { id: 'commands', title: 'Команды', md: 'commands.md' },
-  {
-    id: 'cycle', title: 'Цикл работы', md: 'cycle.md', tail: 'cycle-rules.md',
-    figs: [
-      {
-        svg: 'cycle-flow.svg', title: 'Цикл задачи: кто что делает', legend: true,
-        caption: 'Замечания и расхождения не порождают новый план: они возвращают в исполнение того же плана ' +
-          '(раздел «Отклонения»), и результат снова проходит проверку и допуск. Закрыть задачу можно, когда правок нет.'
-      },
-      {
-        svg: 'cycle-step.svg', title: 'Один шаг внутри /execute',
-        caption: 'Шаг закрывается, только когда его критерий из плана проверен фактом — запуском, сверкой, чтением ' +
-          'результата. Коммит на каждый шаг: ход работы виден в Git Graph.'
-      }
-    ]
-  },
-  {
-    id: 'repos', title: 'Репозитории',
-    text: '# Репозитории\n\nКакой репозиторий что хранит, откуда берёт и кому отдаёт.',
-    links: [['Подробнее: таблица и схемы', 'cycleWelcome.openRepos']],
-    figs: [{
-      svg: 'repos-map.svg', title: 'Потоки данных', legend: 'map',
-      caption: 'Схема на демо-примере.'
-    }]
-  },
-  {
-    id: 'period', title: 'Процесс периода',
-    text: '# Процесс периода\n\nМесяц по этапам: какой репозиторий, чем запускается, что передаёт дальше.',
-    links: [['Подробнее: этапы таблицей', 'cycleWelcome.openRepos']],
-    figs: [{
-      svg: 'period-map.svg', title: 'Месяц по репозиториям', legend: 'map',
-      caption: 'Внутри любого репозитория задачи идут по циклу: /grill-me → /plan-task → /execute → /verify → /close-task.'
-    }]
-  },
-  { id: 'rules', title: 'Клавиши и правила', md: 'rules.md' },
-  { id: 'attention', title: 'Требует внимания', attention: true, links: [['Открыть пульт', 'cycleWelcome.openDashboard']] },
-  {
-    id: 'links', title: 'Пульт и документы', md: 'links.md',
-    links: [['Открыть пульт', 'cycleWelcome.openDashboard'], ['README плагина', 'cycleWelcome.openReadme'],
-      ['План цикла', 'cycleWelcome.openPlan'], ['Карта репозиториев', 'cycleWelcome.openRepos']]
-  }
-];
-const ALLOWED = new Set(['cycleWelcome.openDashboard', 'cycleWelcome.openReadme', 'cycleWelcome.openPlan', 'cycleWelcome.openRepos',
-  'cycleWelcome.openProjectFile']);
+const get = k => cfg().get(k);
 
 const LEGEND = '<div class="legend"><span><i class="sw" style="border-color:var(--ink)"></i>делает Claude</span>' +
   '<span><i class="sw" style="border-color:var(--accent)"></i>решаете вы</span>' +
@@ -74,7 +30,7 @@ let panel;
 let steps = STEPS;   // STEPS + проектные разделы окна, пересобирается в render()
 
 // Проектные разделы — только из настройки уровня workspace (файл .code-workspace), пользовательская не считается.
-// Пути в настройке — от папки файла workspace (решение 1).
+// Пути в настройке — от папки файла workspace.
 function projectSteps() {
   const list = (cfg().inspect('projectSections') || {}).workspaceValue;
   if (!Array.isArray(list) || !list.length) return [];
@@ -125,7 +81,9 @@ async function render(ext, webview, step) {
       : l.step ? `<a href="#" data-step-link="${esc(l.step)}">${esc(l.title)}</a>`
       : l.error ? `<span class="broken">${esc(l.title)} — ${esc(l.error)}</span>`
       : `<a href="#" data-file="${i}" data-section="${esc(s.id)}">${esc(l.title)}</a>`;
-    if (s.links) html += '<p class="links">' + s.links.map(link).join(' · ') + '</p>';
+    // ссылки на ненастроенные документы скрыты; ссылки проектных разделов — объекты, фильтр их не трогает
+    const links = настройки.ссылки(s.links, get);
+    if (links && links.length) html += '<p class="links">' + links.map(link).join(' · ') + '</p>';
     for (const f of s.figs || []) {
       html += `<figure><h2>${esc(f.title)}</h2><div class="scroll">${read(f.svg)}</div>` +
         (f.legend === 'map' ? LEGEND_MAP : f.legend ? LEGEND : '') + `<figcaption>${esc(f.caption)}</figcaption></figure>`;
@@ -234,12 +192,22 @@ function openInBrowser(p) {
     vscode.window.showWarningMessage(`Пульта нет: ${p}. Соберите его.`);
     return;
   }
+  // на macOS и Linux explorer.exe нет, а кириллица в file://-адресе там не мешает
+  if (process.platform !== 'win32') return vscode.env.openExternal(vscode.Uri.file(p));
   require('child_process').spawn('explorer.exe', [p], { detached: true, stdio: 'ignore' }).unref();
 }
 
 function openFile(p) { return vscode.commands.executeCommand('vscode.open', vscode.Uri.file(p)); }
 
-// Файл проектного раздела — по id раздела и номеру ссылки: путь берётся из описания раздела, не из webview (решение 8).
+// Документ по команде: путь из настроек; не настроен — подсказка вместо ошибки.
+function openDoc(cmd, open) {
+  const p = настройки.путь(cmd, get);
+  if (!p) return vscode.window.showInformationMessage(настройки.подсказка(cmd));
+  return open(p);
+}
+const preview = p => vscode.commands.executeCommand('markdown.showPreview', vscode.Uri.file(p));
+
+// Файл проектного раздела — по id раздела и номеру ссылки: путь берётся из описания раздела, не из webview.
 function openProjectFile(sectionId, i) {
   const s = steps.find(x => x.project && x.id === sectionId);
   const l = s && s.links && s.links[i];
@@ -253,11 +221,11 @@ function activate(context) {
   const ext = context.extensionPath;
   context.subscriptions.push(
     vscode.commands.registerCommand('cycleWelcome.show', () => show(ext)),
-    vscode.commands.registerCommand('cycleWelcome.openDashboard', () => openInBrowser(path.join(root(), 'пульт.html'))),
-    vscode.commands.registerCommand('cycleWelcome.openReadme', () => openFile(path.join(root(), '_цикл', 'README.md'))),
-    vscode.commands.registerCommand('cycleWelcome.openRepos', () => vscode.commands.executeCommand('markdown.showPreview', vscode.Uri.file(path.join(root(), 'Репозитории.md')))),
+    vscode.commands.registerCommand('cycleWelcome.openDashboard', () => openDoc('cycleWelcome.openDashboard', openInBrowser)),
+    vscode.commands.registerCommand('cycleWelcome.openReadme', () => openDoc('cycleWelcome.openReadme', openFile)),
+    vscode.commands.registerCommand('cycleWelcome.openRepos', () => openDoc('cycleWelcome.openRepos', preview)),
     vscode.commands.registerCommand('cycleWelcome.openProjectFile', openProjectFile),
-    vscode.commands.registerCommand('cycleWelcome.openPlan', () => openFile(path.join(root(), 'План цикла.md'))),
+    vscode.commands.registerCommand('cycleWelcome.openPlan', () => openDoc('cycleWelcome.openPlan', openFile)),
     // Перенос в другую группу, отдельное окно, перезапуск VS Code: вкладка пересоздаётся на том же пункте.
     vscode.window.registerWebviewPanelSerializer(VIEW, {
       async deserializeWebviewPanel(p, state) {
