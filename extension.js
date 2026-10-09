@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const разделы = require('./проектные-разделы.js');
 const настройки = require('./настройки.js');
+const сводка = require('./сводка.js');
 const { STEPS, ALLOWED } = require('./встроенные-разделы.js');
 
 const VIEW = 'cycleWelcome.panel';
@@ -46,23 +47,6 @@ function projectSteps() {
   });
 }
 
-function attentionMd() {
-  try {
-    const s = JSON.parse(fs.readFileSync(path.join(root(), 'пульт-сводка.json'), 'utf8'));
-    const p1 = s['P1_в_работе'] > s['лимит_P1'] ? ` · **P1: ${s['P1_в_работе']} при лимите ${s['лимит_P1']}**` : '';
-    let md = `# Требует внимания: ${s['требует_внимания']}\n\n` +
-      `Просрочено **${s['просрочено']}** · ждёт вас **${s['ждёт_вас']}** · в работе ${s['в_работе']} · в бэклоге ${s['бэклог']}${p1}\n\n`;
-    md += s['задачи'].length
-      ? '| Проект | Задача | Почему |\n|---|---|---|\n' +
-        s['задачи'].map(t => `| ${t['проект']} | ${t['задача']} (${t['приоритет'] || ''}) | ${t['причины'].join('; ')} |`).join('\n') + '\n\n'
-      : 'Ничего не горит.\n\n';
-    return md + `Проектов с циклом: ${s['проектов_с_циклом']} из ${s['проектов']}. Пульт собран ${s['собран']}` +
-      ' — пересобирается в конце каждой сессии Claude Code.\n';
-  } catch (e) {
-    return '# Требует внимания\n\nСводки пульта пока нет. Соберите пульт.\n';
-  }
-}
-
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 async function render(ext, webview, step) {
@@ -74,7 +58,7 @@ async function render(ext, webview, step) {
   for (const s of steps) {
     // у проектного раздела пути уже абсолютные (проектные-разделы.js), у встроенных — от media/
     const read = f => fs.readFileSync(s.project ? f : path.join(ext, 'media', f), 'utf8');
-    const src = s.attention ? attentionMd() : s.md ? read(s.md) : s.text;
+    const src = s.attention ? сводка.раздел(root(), fs.readFileSync) : s.md ? read(s.md) : s.text;
     let html = await md(src);
     // ссылка: [текст, команда] у встроенных; {title, step} — переход к разделу вкладки; {title, file} — файл проекта по номеру
     const link = (l, i) => Array.isArray(l) ? `<a href="#" data-cmd="${l[1]}">${esc(l[0])}</a>`
