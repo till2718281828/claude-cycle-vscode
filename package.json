@@ -67,7 +67,7 @@
           "items": { "type": "string" },
           "default": [],
           "scope": "window",
-          "description": "Проектные разделы вкладки: пути к JSON-описаниям разделов от папки файла workspace. Читается только из настроек .code-workspace; формат — README памятки."
+          "description": "Проектные разделы вкладки: пути к JSON-описаниям разделов от папки файла workspace. Читается только из настроек .code-workspace; формат — README репозитория claude-cycle-vscode."
         },
         "cycleWelcome.projectsRoot": {
           "type": "string",

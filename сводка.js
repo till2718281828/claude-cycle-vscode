@@ -58,7 +58,7 @@ function раздел(root, read) {
     // демо — только когда сводки нет; файл есть, но не читается — это ошибка, а не повод показать вымысел
     if (e.code !== 'ENOENT') return ошибка(e.message);
     return '> **Демо.** Пример на вымышленных проектах. Свой список появится, когда в настройке ' +
-      '`cycleWelcome.projectsRoot` будет папка с `' + ФАЙЛ + '` — формат описан в README.\n\n' + markdown(ДЕМО);
+      '`cycleWelcome.projectsRoot` будет папка с `' + ФАЙЛ + '`; формат — `docs/pult-summary.md` в репозитории расширения.\n\n' + markdown(ДЕМО);
   }
   try {
     const s = JSON.parse(json);

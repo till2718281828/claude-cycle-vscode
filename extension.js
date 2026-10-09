@@ -24,7 +24,7 @@ const LEGEND_MAP = '<div class="legend"><span>—&#9656; данные</span>' +
   '<span style="color:var(--accent)">··· правила</span>' +
   '<span style="color:var(--stop)">- - - возврат с правками</span>' +
   '<span><i class="sw" style="border-color:var(--accent)"></i>отчёт наверх</span>' +
-  '<span><i class="sw" style="border-color:var(--check)"></i>разбор замечаний</span>' +
+  '<span><i class="sw" style="border-color:var(--check)"></i>проверка, разбор замечаний</span>' +
   '<span><i class="sw" style="border-color:var(--muted);border-style:dashed"></i>внешний источник</span></div>';
 
 let panel;
