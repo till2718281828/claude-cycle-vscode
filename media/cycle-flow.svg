@@ -1,0 +1,99 @@
+<svg viewBox="0 0 1240 470" role="img" aria-label="Цикл задачи: разведка, grill и план в plan mode; остановка на утверждение плана; исполнение шаг за шагом; независимая проверка возвращает в исполнение, если не сошлось; допуск к выкладке; замечания заказчика возвращают в исполнение того же плана; закрытие, когда правок нет." xmlns="http://www.w3.org/2000/svg">
+  <!-- Правится руками при изменении фаз цикла. Цвета — CSS-переменные вкладки «Цикл работы» (extension.js). -->
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink)"/></marker>
+    <marker id="ahs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--stop)"/></marker>
+  </defs>
+  <!-- дорожки -->
+  <rect x="0" y="60" width="1240" height="96" fill="var(--accent-soft)"/>
+  <rect x="0" y="156" width="1240" height="120" fill="var(--lane)"/>
+  <rect x="0" y="276" width="1240" height="92" fill="var(--check-soft)"/>
+  <rect x="0" y="368" width="1240" height="100" fill="var(--lane)"/>
+  <g stroke="var(--line)" stroke-width="1"><line x1="0" y1="156" x2="1240" y2="156"/><line x1="0" y1="276" x2="1240" y2="276"/><line x1="0" y1="368" x2="1240" y2="368"/><line x1="124" y1="60" x2="124" y2="468"/></g>
+  <g fill="var(--ink)" font-size="13" font-weight="600">
+    <text x="12" y="112">Вы</text>
+    <text x="12" y="220">Claude</text>
+    <text x="12" y="318">Проверяющий</text>
+    <text x="12" y="410">Заказчик,</text><text x="12" y="426">рецензенты</text>
+  </g>
+  <g fill="var(--muted)" font-size="11">
+    <text x="12" y="128">решения</text>
+    <text x="12" y="236">исполнитель</text>
+    <text x="12" y="334">чистый контекст,</text><text x="12" y="348">только чтение</text>
+  </g>
+  <!-- полоса plan mode: Разведка, Grill, План -->
+  <rect x="130" y="26" width="392" height="440" rx="6" fill="none" stroke="var(--accent)" stroke-width="1.2" stroke-dasharray="6 4"/>
+  <text x="326" y="44" text-anchor="middle" font-size="11" font-weight="600" fill="var(--accent)" letter-spacing=".06em">PLAN MODE (Shift+Tab) — файлы не меняются</text>
+  <!-- фазы -->
+  <g fill="var(--muted)" font-size="11" font-weight="600" letter-spacing=".06em" text-anchor="middle">
+    <text x="192" y="16">РАЗВЕДКА</text><text x="324" y="16">GRILL</text><text x="456" y="16">ПЛАН</text><text x="588" y="16">ИСПОЛНЕНИЕ</text><text x="720" y="16">ПРОВЕРКА</text><text x="918" y="16">ВЫКЛАДКА</text><text x="1116" y="16">РАЗБОР · ЗАКРЫТИЕ</text>
+  </g>
+  <!-- стрелки -->
+  <g fill="none" stroke="var(--ink)" stroke-width="1.5">
+    <path d="M248 216 H258 V108 H268" marker-end="url(#ah)"/>
+    <path d="M380 108 H390 V216 H400" marker-end="url(#ah)"/>
+    <path d="M456 190 V134" marker-end="url(#ah)"/>
+    <path d="M512 108 H522 V216 H532" marker-end="url(#ah)"/>
+    <path d="M644 216 H654 V322 H664" marker-end="url(#ah)"/>
+    <path d="M776 322 H786 V108 H796" marker-end="url(#ah)"/>
+    <path d="M908 108 H918 V414 H928" marker-end="url(#ah)"/>
+    <path d="M1040 414 H1050 V108 H1060" marker-end="url(#ah)"/>
+    <path d="M1116 134 V190" marker-end="url(#ah)"/>
+  </g>
+  <path d="M664 338 H600 V242" fill="none" stroke="var(--stop)" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#ahs)"/>
+  <path d="M1172 100 H1200 V52 H600 V190" fill="none" stroke="var(--stop)" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#ahs)"/>
+  <g font-size="11" fill="var(--muted)">
+    <text x="450" y="166" text-anchor="end">на «ок»</text>
+    <text x="1122" y="166">правок нет</text>
+    <text x="632" y="356" text-anchor="middle" fill="var(--stop)">не сошлось</text>
+    <text x="900" y="46" text-anchor="middle" fill="var(--stop)">есть правки → тот же план, «Отклонения», снова /verify</text>
+  </g>
+  <!-- узлы: Claude -->
+  <g font-size="13" text-anchor="middle">
+    <rect x="136" y="190" width="112" height="52" rx="5" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.2"/>
+    <text x="192" y="212" font-weight="600" fill="var(--ink)">Разведка</text>
+    <text x="192" y="230" font-size="11" fill="var(--muted)">файлы, паспорта</text>
+
+    <rect x="400" y="190" width="112" height="52" rx="5" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.2"/>
+    <text x="456" y="212" font-weight="600" fill="var(--ink)" class="mono">/plan-task</text>
+    <text x="456" y="230" font-size="11" fill="var(--muted)">шаги и критерии</text>
+
+    <rect x="532" y="190" width="112" height="52" rx="5" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.2"/>
+    <text x="588" y="212" font-weight="600" fill="var(--ink)" class="mono">/execute</text>
+    <text x="588" y="230" font-size="11" fill="var(--muted)">шаг за шагом ↻</text>
+
+    <rect x="1060" y="190" width="112" height="52" rx="5" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.2"/>
+    <text x="1116" y="212" font-weight="600" fill="var(--ink)" class="mono">/close-task</text>
+    <text x="1116" y="230" font-size="11" fill="var(--muted)">журнал, «Ловушки»</text>
+  </g>
+  <!-- узлы: вы -->
+  <g font-size="13" text-anchor="middle">
+    <rect x="268" y="82" width="112" height="52" rx="5" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.5"/>
+    <text x="324" y="104" font-weight="600" fill="var(--accent)" class="mono">/grill-me</text>
+    <text x="324" y="122" font-size="11" fill="var(--muted)">вопросы раундами</text>
+
+    <rect x="400" y="82" width="112" height="52" rx="5" fill="var(--stop-soft)" stroke="var(--stop)" stroke-width="1.5"/>
+    <text x="456" y="104" font-weight="600" fill="var(--stop)">СТОП</text>
+    <text x="456" y="122" font-size="11" fill="var(--ink)">утвердить план</text>
+
+    <rect x="796" y="82" width="112" height="52" rx="5" fill="var(--stop-soft)" stroke="var(--stop)" stroke-width="1.5"/>
+    <text x="852" y="104" font-weight="600" fill="var(--stop)">СТОП</text>
+    <text x="852" y="122" font-size="11" fill="var(--ink)">допуск к выдаче</text>
+
+    <rect x="1060" y="82" width="112" height="52" rx="5" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.5"/>
+    <text x="1116" y="104" font-weight="600" fill="var(--accent)">Вердикты</text>
+    <text x="1116" y="122" font-size="11" fill="var(--muted)" class="mono">/remarks-review</text>
+  </g>
+  <!-- проверяющий -->
+  <g font-size="13" text-anchor="middle">
+    <rect x="664" y="296" width="112" height="52" rx="5" fill="var(--surface)" stroke="var(--check)" stroke-width="1.5"/>
+    <text x="720" y="318" font-weight="600" fill="var(--check)" class="mono">/verify</text>
+    <text x="720" y="336" font-size="11" fill="var(--muted)">по профилю</text>
+  </g>
+  <!-- заказчик -->
+  <g font-size="13" text-anchor="middle">
+    <rect x="928" y="388" width="112" height="52" rx="5" fill="var(--surface)" stroke="var(--muted)" stroke-width="1.2"/>
+    <text x="984" y="410" font-weight="600" fill="var(--ink)">Замечания</text>
+    <text x="984" y="428" font-size="11" fill="var(--muted)" class="mono">/remark</text>
+  </g>
+</svg>

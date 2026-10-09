@@ -1,0 +1,69 @@
+{
+  "name": "claude-cycle-vscode",
+  "displayName": "Цикл работы — памятка",
+  "description": "Памятка цикла работы по проектам — своя вкладка «Цикл работы» в каждом новом окне: команды, фазы цикла, репозитории, процесс периода, правила, что требует внимания.",
+  "version": "1.0.0",
+  "publisher": "till2718281828",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/till2718281828/claude-cycle-vscode"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./extension.js",
+  "activationEvents": [
+    "onStartupFinished",
+    "onWebviewPanel:cycleWelcome.panel"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "cycleWelcome.show",
+        "title": "Цикл: памятка"
+      },
+      {
+        "command": "cycleWelcome.openDashboard",
+        "title": "Цикл: открыть пульт"
+      },
+      {
+        "command": "cycleWelcome.openReadme",
+        "title": "Цикл: README плагина"
+      },
+      {
+        "command": "cycleWelcome.openPlan",
+        "title": "Цикл: план цикла"
+      },
+      {
+        "command": "cycleWelcome.openRepos",
+        "title": "Цикл: карта репозиториев"
+      }
+    ],
+    "configuration": {
+      "title": "Цикл работы",
+      "properties": {
+        "cycleWelcome.showOnStartup": {
+          "type": "boolean",
+          "default": true,
+          "description": "Открывать вкладку «Цикл работы» в каждом новом окне VS Code."
+        },
+        "cycleWelcome.projectSections": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "scope": "window",
+          "description": "Проектные разделы вкладки: пути к JSON-описаниям разделов от папки файла workspace. Читается только из настроек .code-workspace; формат — README памятки."
+        },
+        "cycleWelcome.projectsRoot": {
+          "type": "string",
+          "default": "",
+          "description": "Папка проектов: там лежат пульт.html и пульт-сводка.json."
+        }
+      }
+    }
+  }
+}

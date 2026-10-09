@@ -1,0 +1,68 @@
+<svg viewBox="0 0 1120 280" role="img" aria-label="Шаг внутри /execute: шаг плана с критерием, выполнение с опорой на паспорт и «Ловушки», проверка критерия фактом; сошлось — галочка и коммит шага, дальше следующий шаг или СТОП; не сошлось — запись в «Отклонения» и решение пользователя." xmlns="http://www.w3.org/2000/svg">
+  <!-- Правится руками при изменении фаз цикла. Цвета — CSS-переменные вкладки «Цикл работы» (extension.js). -->
+  <defs>
+    <marker id="bh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink)"/></marker>
+    <marker id="bhs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--stop)"/></marker>
+  </defs>
+  <g fill="none" stroke="var(--ink)" stroke-width="1.5">
+    <path d="M150 128 H206" marker-end="url(#bh)"/>
+    <path d="M340 128 H396" marker-end="url(#bh)"/>
+    <path d="M530 128 H586" marker-end="url(#bh)"/>
+    <path d="M720 128 H776" marker-end="url(#bh)"/>
+    <path d="M910 128 H966" marker-end="url(#bh)"/>
+    <path d="M275 58 V96" marker-end="url(#bh)"/>
+  </g>
+  <path d="M465 156 V194" fill="none" stroke="var(--stop)" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#bhs)"/>
+  <path d="M400 222 H362 V172 H290 V160" fill="none" stroke="var(--stop)" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#bhs)"/>
+  <g font-size="11" fill="var(--muted)" text-anchor="middle">
+    <text x="178" y="120">по плану</text>
+    <text x="368" y="120">факт</text>
+    <text x="558" y="120">сошлось</text>
+    <text x="748" y="120">↻</text>
+    <text x="938" y="120">все шаги</text>
+    <text x="283" y="84" text-anchor="start">правила, «Ловушки»</text>
+    <text x="476" y="182" text-anchor="start" fill="var(--stop)">не сошлось</text>
+    <text x="297" y="168" text-anchor="start" fill="var(--stop)">план поправлен</text>
+  </g>
+  <g font-size="13" text-anchor="middle">
+    <rect x="200" y="14" width="150" height="44" rx="5" fill="var(--surface)" stroke="var(--muted)" stroke-dasharray="3 3"/>
+    <text x="275" y="33" font-weight="600" fill="var(--ink)">Паспорт раздела</text>
+    <text x="275" y="49" font-size="11" fill="var(--muted)">блок «Цикл» → паспорта</text>
+
+    <rect x="20" y="100" width="130" height="56" rx="5" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.2"/>
+    <text x="85" y="123" font-weight="600" fill="var(--ink)">Шаг плана</text>
+    <text x="85" y="141" font-size="11" fill="var(--muted)">критерий приёмки</text>
+
+    <rect x="210" y="100" width="130" height="56" rx="5" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.5"/>
+    <text x="275" y="123" font-weight="600" fill="var(--accent)">Сделать шаг</text>
+    <text x="275" y="141" font-size="11" fill="var(--ink)">только нужные правки</text>
+
+    <rect x="400" y="100" width="130" height="56" rx="5" fill="var(--surface)" stroke="var(--check)" stroke-width="1.5"/>
+    <text x="465" y="123" font-weight="600" fill="var(--check)">Проверить</text>
+    <text x="465" y="141" font-size="11" fill="var(--muted)">запуск, сверка</text>
+
+    <rect x="590" y="100" width="130" height="56" rx="5" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.2"/>
+    <text x="655" y="123" font-weight="600" fill="var(--ink)">- [x] + коммит</text>
+    <text x="655" y="141" font-size="11" fill="var(--muted)">«слаг: шаг N — …»</text>
+
+    <rect x="780" y="100" width="130" height="56" rx="5" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.2"/>
+    <text x="845" y="123" font-weight="600" fill="var(--ink)">Следующий шаг</text>
+    <text x="845" y="141" font-size="11" fill="var(--stop)">СТОП → ждёт вас</text>
+
+    <rect x="970" y="100" width="130" height="56" rx="5" fill="var(--surface)" stroke="var(--check)" stroke-width="1.5"/>
+    <text x="1035" y="123" font-weight="600" fill="var(--check)" class="mono">/verify</text>
+    <text x="1035" y="141" font-size="11" fill="var(--muted)">предлагает Claude</text>
+
+    <rect x="400" y="196" width="170" height="52" rx="5" fill="var(--stop-soft)" stroke="var(--stop)" stroke-width="1.5"/>
+    <text x="485" y="218" font-weight="600" fill="var(--stop)">СТОП: «Отклонения»</text>
+    <text x="485" y="236" font-size="11" fill="var(--ink)">как поправить — решаете вы</text>
+  </g>
+  <!-- как выглядит «сделать шаг» по профилям -->
+  <rect x="20" y="186" width="322" height="84" rx="5" fill="var(--lane)" stroke="var(--line)"/>
+  <g font-size="11" fill="var(--ink)">
+    <text x="30" y="205"><tspan font-weight="600">A</tspan> Excel, презентации: скрипт → Реестр чисел →</text>
+    <text x="44" y="220">xlsx / слайды пересобираются, не правятся</text>
+    <text x="30" y="240"><tspan font-weight="600">B</tspan> код: <tspan class="mono">/tdd</tspan>, перед коммитом <tspan class="mono">/cycle:code-review</tspan></text>
+    <text x="30" y="260"><tspan font-weight="600">C</tspan> документ: текст против критерия читателя</text>
+  </g>
+</svg>
