@@ -48,7 +48,7 @@ test('в режиме ограниченного доступа все наст�
 });
 
 // Шаблоны собраны из частей, чтобы тест не находил сам себя
-const ЛИЧНОЕ = [new RegExp('[A-Za-z]:' + '\\\\{1,2}' + 'Users' + '\\\\{1,2}', 'i'), new RegExp('USER' + 'PROFILE')];
+const ЛИЧНОЕ = [new RegExp('[A-Za-z]:' + '[\\\\/]{1,2}' + 'Users' + '[\\\\/]{1,2}', 'i'), new RegExp('USER' + 'PROFILE')];
 
 function файлы(dir) {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap(e =>

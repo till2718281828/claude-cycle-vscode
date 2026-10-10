@@ -83,6 +83,20 @@ test('разметка в чужих текстах погашена, перев
   assert.ok(md.includes('| П\\_1 | \\`код\\` | a\\\\b |'), md);
 });
 
+test('обязательный счётчик не число — текст ошибки', () => {
+  const d = fs.mkdtempSync(path.join(os.tmpdir(), 'сводка-'));
+  fs.writeFileSync(path.join(d, 'пульт-сводка.json'), JSON.stringify({ ...сводка, просрочено: '<b>1</b>' }));
+  const md = м.раздел(d, fs.readFileSync);
+  assert.match(md, /не читается.*не числа: просрочено/);
+  assert.doesNotMatch(md, /<b>/);
+});
+
+test('необязательные поля с разметкой экранируются', () => {
+  const md = м.markdown({ ...сводка, P1_в_работе: '<i>9</i>', лимит_P1: 3, проектов: '<x>', проектов_с_циклом: '*2*' });
+  assert.doesNotMatch(md, /<i>|<x>/);
+  assert.ok(md.includes('Проектов с циклом: \\*2\\* из \\<x\\>.'), md);
+});
+
 test('сигнал без уровня — прочерк', () => {
   assert.match(м.markdown({ ...сводка, сигналы: [{ проект: 'А', текст: 'т' }] }), /- \*\*—\*\* · А: т/);
 });

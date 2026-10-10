@@ -52,7 +52,7 @@ const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '
 async function render(ext, webview, step) {
   const media = f => webview.asWebviewUri(vscode.Uri.file(path.join(ext, 'media', f)));
   const md = async text => String(await vscode.commands.executeCommand('markdown.api.render', text));
-  const nonce = Math.random().toString(36).slice(2);
+  const nonce = require('crypto').randomBytes(16).toString('base64');
   let nav = '', body = '';
   steps = разделы.вставить(STEPS, projectSteps());
   for (const s of steps) {
@@ -62,7 +62,7 @@ async function render(ext, webview, step) {
     let html = await md(src);
     // ссылка: [текст, команда] у встроенных; {title, step} — переход к разделу вкладки; {title, file} — файл проекта по номеру;
     // {title, user} — своя ссылка из cycleWelcome.links по номеру
-    const link = (l, i) => Array.isArray(l) ? `<a href="#" data-cmd="${l[1]}">${esc(l[0])}</a>`
+    const link = (l, i) => Array.isArray(l) ? `<a href="#" data-cmd="${esc(l[1])}">${esc(l[0])}</a>`
       : l.step ? `<a href="#" data-step-link="${esc(l.step)}">${esc(l.title)}</a>`
       : l.error ? `<span class="broken">${esc(l.title)} — ${esc(l.error)}</span>`
       : l.user !== undefined ? `<a href="#" data-user-link="${l.user}">${esc(l.title)}</a>`
@@ -70,7 +70,7 @@ async function render(ext, webview, step) {
     // ссылки на ненастроенные документы скрыты; ссылки проектных разделов — объекты, фильтр их не трогает
     const links = (настройки.ссылки(s.links, get, ext) || [])
       .concat(s.userLinks ? настройки.своиСсылки(get).map((l, i) => ({ title: l.title, user: i })) : []);
-    if (links && links.length) html += '<p class="links">' + links.map(link).join(' · ') + '</p>';
+    if (links.length) html += '<p class="links">' + links.map(link).join(' · ') + '</p>';
     for (const f of s.figs || []) {
       html += `<figure><h2>${esc(f.title)}</h2><div class="scroll">${read(f.svg)}</div>` +
         (f.legend === 'map' ? LEGEND_MAP : f.legend ? LEGEND : '') + `<figcaption>${esc(f.caption)}</figcaption></figure>`;
