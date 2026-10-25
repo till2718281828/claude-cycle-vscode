@@ -18,8 +18,13 @@ jobs:
           node-version: 20
       - name: Версия тега = версия package.json
         run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
       - name: Тесты
         run: npm test
+      - name: Тесты сборщика монитора
+        run: pip install pytest && python -m pytest пульт -q
       - name: Сборка .vsix
         run: npm run package
       - name: Релиз

@@ -3,3 +3,6 @@ test/**
 docs/img/**
 .gitignore
 *.vsix
+**/__pycache__/**
+**/.pytest_cache/**
+пульт/test_*.py
