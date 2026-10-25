@@ -28,6 +28,8 @@ function конфигМонитора(get, демо) {
   for (const k of ПОРОГИ) if (th && Number.isInteger(th[k]) && th[k] >= 0) out[k] = th[k];
   const pipes = get('pipelines');
   if (pipes && typeof pipes === 'object' && !Array.isArray(pipes)) out.конвейеры = pipes;
+  const srv = строка(get('serverStatusFile'));   // относительный путь сборщик считает от папки проектов
+  if (srv) out.сервер = { файл: srv };
   return out;
 }
 

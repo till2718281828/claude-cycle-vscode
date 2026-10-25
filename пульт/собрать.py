@@ -7,7 +7,8 @@
 
 Источник данных — только файлы папки проектов: шапки и шаги планов, таблица бэклога, git, сигналы автоматов
 проекта (`_Служебное/сигналы.json`), команды (`пульт/команды.json`, `<проект>/_Служебное/команды.json`), сессии
-Claude Code (`~/.claude/projects` или `$CLAUDE_CONFIG_DIR/projects`), файлы периодов проектов из настройки «конвейеры». Пульт ничего не хранит сам.
+Claude Code (`~/.claude/projects` или `$CLAUDE_CONFIG_DIR/projects`), файлы периодов проектов из настройки «конвейеры»,
+файл состояния сервера из настройки «сервер» (плитка сервера). Пульт ничего не хранит сам.
 Битый файл проекта пульт не роняет: он попадает в «ошибки данных».
 
 Соглашение сигналов: автомат проекта сам пишет `<проект>/_Служебное/сигналы.json` — список
@@ -497,6 +498,83 @@ def conveyors(proj: Path, spec):
     return out
 
 
+# ── плитка сервера ─────────────────────────────────────────────────────────────────────────────────────────────
+# Настройка «сервер»: {"файл": "<путь к JSON состояния сервера>", "пороги": {disk_warn, disk_crit, commit_warn, commit_crit}}.
+# Файл пишет свой монитор сервера (раз в час и т. п.); формат — README, пример — demo/_сервер.json. Относительный путь —
+# от папки проектов.
+SERVER_THRESHOLDS = {"disk_warn": 10, "disk_crit": 5, "commit_warn": 85, "commit_crit": 90}
+
+
+def level(value, warn, crit, low_is_bad):
+    if low_is_bad:
+        return "crit" if value < crit else "warn" if value < warn else "ok"
+    return "crit" if value >= crit else "warn" if value >= warn else "ok"
+
+
+def server_history(rows, days):
+    """Тренды 30 дней из «истории» файла: последнее значение за день; дня нет — null."""
+    disk, com = {}, {}
+    for r in rows if isinstance(rows, list) else []:
+        d = str((r or {}).get("дата") or "")[:10]
+        try:
+            disk[d], com[d] = float(r["диск_свободно_гб"]), round(float(r["commit_процент"]))
+        except (KeyError, TypeError, ValueError):
+            continue
+    if not disk:
+        return None
+    return {"days": [d.isoformat() for d in days], "disk_free_gb": [disk.get(d.isoformat()) for d in days],
+            "commit_pct": [com.get(d.isoformat()) for d in days]}
+
+
+def server_tile(root: Path, spec, days):
+    """Плитка сервера из файла состояния (контракт Server в пульт.js); нет настройки, файла или чисел — None."""
+    if not isinstance(spec, dict) or not spec.get("файл"):
+        return None
+    f = Path(spec["файл"])
+    f = f if f.is_absolute() else root / f
+    m = load_json(f)
+    if m is None:
+        if f.exists():
+            raise ValueError(f"не JSON: {f.name}")
+        return None
+    disk, ram, com = m.get("диск") or {}, m.get("озу") or {}, m.get("commit") or {}
+    free, pct = disk.get("свободно_гб"), com.get("процент")
+    if pct is None and com.get("занято_гб") is not None and com.get("предел_гб"):
+        pct = round(100 * com["занято_гб"] / com["предел_гб"])
+    if not isinstance(free, (int, float)) or not isinstance(pct, (int, float)):
+        raise ValueError("нет чисел: диск.свободно_гб и commit.процент")
+    t = {**SERVER_THRESHOLDS, **(spec.get("пороги") or {})}
+    name, mark = str(m.get("имя") or "Сервер"), str(disk.get("метка") or "")
+    disk_lvl = level(free, t["disk_warn"], t["disk_crit"], low_is_bad=True)
+    com_lvl = level(pct, t["commit_warn"], t["commit_crit"], low_is_bad=False)
+    bak = m.get("бэкап") if isinstance(m.get("бэкап"), dict) else {}
+    backup = bak.get("изменён") if bak.get("есть") else None
+    why = []
+    if disk_lvl != "ok":
+        why.append({"kind": disk_lvl, "text": f"диск {mark}: свободно {free} ГБ".replace("диск :", "диск:")})
+    if com_lvl != "ok":
+        why.append({"kind": com_lvl, "text": f"commit памяти {pct} %"})
+    if not backup:
+        why.append({"kind": "crit", "text": "бэкапа нет"})
+    if m.get("ожидает_перезагрузки"):
+        why.append({"kind": "warn", "text": "ждёт перезагрузки после обновлений"})
+    if m.get("аварийных_14д"):
+        why.append({"kind": "warn", "text": f"аварийных перезагрузок за 14 дней: {m['аварийных_14д']}"})
+    return {"name": name, "checked": m.get("замер"), "file": str(f), "thresholds": t,
+            "disk": {"free_gb": free, "total_gb": disk.get("всего_гб"), "mark": mark, "level": disk_lvl},
+            "ram": {"free_gb": ram.get("свободно_гб"), "total_gb": ram.get("всего_гб")},
+            "commit": {"used_gb": com.get("занято_гб"), "total_gb": com.get("предел_гб"), "pct": pct, "level": com_lvl},
+            "sessions": [{"user": x.get("пользователь"), "gb": x.get("гб")} for x in m.get("сеансы", [])
+                         if isinstance(x, dict) and x.get("пользователь")],
+            "top": [{"name": x.get("имя"), "n": x.get("n"), "gb": x.get("гб")} for x in m.get("топ", [])
+                    if isinstance(x, dict) and x.get("имя")],
+            "boot": m.get("загрузка"), "reboot_pending": bool(m.get("ожидает_перезагрузки")),
+            "crashes_14d": m.get("аварийных_14д") or 0,
+            "backup": {"last": backup, "level": "ok" if backup else "crit"},
+            "history": server_history(m.get("история"), days),
+            "level": "crit" if any(w["kind"] == "crit" for w in why) else "warn" if why else "ok", "why": why}
+
+
 # ── окна VS Code ───────────────────────────────────────────────────────────────────────────────────────────────
 def vscode_storage():
     """workspaceStorage VS Code по ОС: там видно, когда окно последний раз работало."""
@@ -551,12 +629,12 @@ def project_workspace(ws, name):
 
 
 # ── сборка ─────────────────────────────────────────────────────────────────────────────────────────────────────
-def count(projects, tasks, th):
-    """Шкалы шапки и «Нужно вам»: задачи с причинами ATTENTION и сигналы проектов."""
+def count(projects, tasks, th, server=None):
+    """Шкалы шапки и «Нужно вам»: задачи с причинами ATTENTION, сигналы проектов и строки плитки сервера."""
     sigs = sum(len(P["sig"]) for P in projects)
     att = sum(1 for x in tasks if any(has(x, k) for k in ATTENTION))
     return {
-        "attention": att + sigs,
+        "attention": att + sigs + (len(server["why"]) if server else 0),
         "overdue": sum(1 for x in tasks if has(x, "crit")),
         "wait": sum(1 for x in tasks if x["st"] == "ждёт вас"),
         "ready": sum(1 for x in tasks if x["ready"]),
@@ -628,8 +706,11 @@ def build(root: Path, th: dict, today: dt.date = None, *, demo=False, git=None, 
         lead_and_stage(P, mine, cfgs.get(P["n"]), verified, errors)
         spec = th.get("конвейеры", {}).get(P["n"])
         P["conveyors"] = guarded(errors, P["n"], P["path"], "конвейер", lambda: conveyors(Path(P["path"]), spec), [])
+    server = guarded(errors, "сервер", (th.get("сервер") or {}).get("файл", ""), "плитка сервера",
+                     lambda: server_tile(root, th.get("сервер"), days), None)
     return {"v": 2, "generated": dt.datetime.now().strftime("%Y-%m-%d %H:%M"), "today": today.isoformat(),
-            "demo": bool(demo), "root": str(root), "thresholds": th, "counts": count(projects, tasks, th),
+            "demo": bool(demo), "root": str(root), "thresholds": th, "counts": count(projects, tasks, th, server),
+            "server": server,
             "commands": read_commands(Path(commands) if commands else HERE / "команды.json", "", errors),
             "projects": projects, "tasks": tasks, "errors": errors, "workspaces": ws}
 

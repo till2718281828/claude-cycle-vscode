@@ -551,7 +551,7 @@ function activate(context) {
     sectionsView.onDidChangeVisibility(e => { if (e.visible) selectInPanel(); }),
     vscode.workspace.onDidChangeConfiguration(async e => {
       if (!e.affectsConfiguration('cycleWelcome')) return;
-      const monitor = ['projectsRoot', 'pythonPath', 'personalProjects', 'hiddenProjects', 'p1Limit', 'thresholds', 'pipelines', 'commandsFile']
+      const monitor = ['projectsRoot', 'pythonPath', 'personalProjects', 'hiddenProjects', 'p1Limit', 'thresholds', 'pipelines', 'commandsFile', 'serverStatusFile']
         .some(k => e.affectsConfiguration('cycleWelcome.' + k));
       if (monitor) { autoFailed = false; rebuildPult(); }
       if (e.affectsConfiguration('cycleWelcome.servers') || e.affectsConfiguration('cycleWelcome.checkMachine')) checkLive();

@@ -65,3 +65,8 @@ test('свои общие кнопки: абсолютный путь как е�
   assert.strictEqual(н.файлКоманд(из({ commandsFile: 'кнопки.json' })), '');
   assert.strictEqual(н.файлКоманд(из({})), '');
 });
+
+test('плитка сервера: путь к файлу состояния — в настройки монитора; пусто — плитки нет', () => {
+  assert.deepStrictEqual(н.конфигМонитора(из({ serverStatusFile: ' сервер/состояние.json ' }), false).сервер, { файл: 'сервер/состояние.json' });
+  assert.strictEqual(н.конфигМонитора(из({}), false).сервер, undefined);
+});

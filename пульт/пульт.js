@@ -20,8 +20,15 @@
 //   errors: [DataError],
 //   workspaces: [{ name, label, path, folder, used: "ГГГГ-ММ-ДДTЧЧ:ММ"|null }],  все *.code-workspace в папке проектов
 //                и папках проектов — строка «Окна»; порядок — последнее открытое окно первым, used null — в конце
+//   server: Server | null                    плитка сервера (настройка «сервер»: файл состояния) — фильтры её не скрывают
 //   servers?: Servers                         добавляет вкладка (модуль серверов, источники.js); нет — блока нет
 // }
+// Server = { name, checked, file, thresholds: { disk_warn, disk_crit (ГБ свободно), commit_warn, commit_crit (%) },
+//            disk: { free_gb, total_gb, mark, level }, ram: { free_gb, total_gb },
+//            commit: { used_gb, total_gb, pct, level }, sessions: [{ user, gb }], top: [{ name, n, gb }],
+//            boot, reboot_pending: bool, crashes_14d: int, backup: { last: date|null, level },
+//            history: { days: [date×30], disk_free_gb: [num|null×30], commit_pct: [num|null×30] } | null,
+//            level: "ok"|"warn"|"crit", why: [{ kind, text }] }   why — строки и в «Нужно вам»
 // Servers = { checked: "ГГГГ-ММ-ДДTЧЧ:ММ:СС", list: [{ name, host, port, purpose, open: bool|null, ms: int|null }],
 //             disk: { free_gb, total_gb } | null, ram: { free_gb, total_gb } | null }
 // Command   = { id, title, prompt, confirm?: bool, hint?: string }
@@ -211,6 +218,55 @@
     return svg;
   }
 
+  // Плитка сервера: диск и commit полосами с порогами, тренды, кто ест память, аптайм, сбои, бэкап.
+  const gb = v => String(v).replace('.', ',');
+  function srvBar(value, max, ticks, level, title) {
+    return h('span', { class: 'track', title },
+      h('span', { class: 'fill' + (level === 'crit' ? ' over' : level === 'warn' ? ' stale' : ''), style: `width:${Math.min(100, 100 * value / max).toFixed(1)}%` }),
+      ticks.map(t => h('span', { class: 'tick', style: `left:${(100 * t / max).toFixed(1)}%` })));
+  }
+  function spark(vals, lo, hi, days) {
+    const have = (vals || []).filter(v => v != null).length;
+    if (!have) return h('span', { class: 'muted spk0', text: 'тренд позже', title: 'тренд за 30 дней появится с историей в файле состояния сервера' });
+    // пара точек у правого края читается как черта — пока истории меньше трёх дней, пишем, с какого дня она есть
+    if (have < 3) {
+      const first = days && days[vals.findIndex(v => v != null)];
+      return h('span', { class: 'muted spk0', text: first ? `тренд с ${dm(first)}` : 'тренд позже', title: 'тренд за 30 дней копится по замерам в файле состояния сервера' });
+    }
+    const w = 90, n = vals.length, pts = vals.map((v, i) => v == null ? null : [i * w / (n - 1), 15 - 14 * (v - lo) / Math.max(1e-9, hi - lo)]);
+    const d = pts.reduce((a, q, i) => q ? a + (a && pts[i - 1] ? 'L' : 'M') + q[0].toFixed(1) + ' ' + q[1].toFixed(1) : a, '');
+    return sv('svg', { class: 'spk', viewBox: `0 0 ${w} 16`, preserveAspectRatio: 'none' }, sv('path', { d, fill: 'none', stroke: 'var(--p-blue)', 'stroke-width': 1.5 }));
+  }
+  function serverTile(v, now) {
+    const T = v.thresholds, upd = Math.round((new Date(v.checked) - new Date(v.boot)) / 86400000 * 10) / 10;   // аптайм на момент замера
+    const min = Math.round((now - new Date(v.checked)) / 60000);
+    const used = v.disk.total_gb - v.disk.free_gb;
+    return h('div', { class: 'meter srv lv-' + v.level, title: v.file },
+      h('div', { class: 'ml' }, h('span', {}, dot(v.level === 'ok' ? 'ok' : v.level, v.level), ' ' + v.name),
+        h('span', { text: `замер ${String(v.checked).slice(11, 16)}` + (min >= 0 && min < 1440 ? ` · ${min} мин назад` : '') + '' })),
+      h('div', { class: 'vr' }, h('span', { class: 'vk', text: v.disk.mark ? 'Диск ' + v.disk.mark : 'Диск' }),
+        h('span', { class: 'vv' + (v.disk.level !== 'ok' ? ' ' + v.disk.level : ''), text: `${gb(v.disk.free_gb)} ГБ своб.` }),
+        srvBar(used, v.disk.total_gb, [v.disk.total_gb - T.disk_warn, v.disk.total_gb - T.disk_crit], v.disk.level,
+          `занято ${gb(used.toFixed(1))} из ${gb(v.disk.total_gb)} ГБ; черты — свободно ${T.disk_warn} и ${T.disk_crit} ГБ`),
+        spark(v.history && v.history.disk_free_gb, 0, v.disk.total_gb / 4, v.history && v.history.days)),
+      h('div', { class: 'vr' }, h('span', { class: 'vk', text: 'Commit' }),
+        h('span', { class: 'vv' + (v.commit.level !== 'ok' ? ' ' + v.commit.level : ''), text: `${v.commit.pct} % · ${gb(v.commit.used_gb)}/${gb(v.commit.total_gb)}` }),
+        srvBar(v.commit.pct, 100, [T.commit_warn, T.commit_crit], v.commit.level,
+          `занятая виртуальная память ${v.commit.pct} %; черты — ${T.commit_warn} и ${T.commit_crit} %: выше 90 % приложения получают отказ`),
+        spark(v.history && v.history.commit_pct, 0, 100, v.history && v.history.days)),
+      h('div', { class: 'vr' }, h('span', { class: 'vk', text: 'ОЗУ' }),
+        // сеансов нет (все вышли, замер монитора пришёлся на это время) — свободная память вместо пустой строки
+        h('span', { class: 'vv', text: v.sessions.length ? v.sessions.map(x => `${x.user} ${gb(x.gb)}`).join(' · ') + ' ГБ'
+          : `своб. ${gb(v.ram.free_gb)} ГБ · сеансов нет`, title: v.sessions.length ? null : 'на момент замера никто не был в системе' }),
+        stack(v.sessions.map((x, i) => ({ cls: 'u' + i, label: x.user, n: x.gb })), v.ram.total_gb),
+        h('span', { class: 'muted spk0', text: `из ${gb(v.ram.total_gb)} ГБ` })),
+      h('div', { class: 'leg' },
+        h('span', { text: `аптайм ${gb(upd)} дн.` }),
+        h('span', { class: v.reboot_pending ? 'warn' : '', text: v.reboot_pending ? 'ждёт перезагрузки' : 'перезагрузка не нужна', title: 'после обновлений системы' }),
+        h('span', { class: v.crashes_14d ? 'warn' : '', text: `аварийных за 14 дн.: ${v.crashes_14d}` }),
+        h('span', { class: v.backup.level === 'crit' ? 'crit' : '', text: v.backup.last ? `бэкап ${dm(v.backup.last)}` : 'бэкапа нет' })));
+  }
+
   // Доска «Портфель»: дорожки по профилю и этапу (решения пользователя на СТОП 1).
   const LANES = [
     { short: 'A', title: 'A · выпуски', test: p => p.stage.lane === 'A' },
@@ -288,14 +344,15 @@
       const work = plans.filter(x => x.st === 'в работе').length;
       const staleP = plans.filter(x => x.reasons.some(r => r.kind === 'stale')).length;
       const bl = tasks.filter(x => x.st === 'бэклог'), blStale = bl.filter(x => x.reasons.some(r => r.kind === 'stale')).length;
+      const tileWhy = data.server ? data.server.why.length : 0;   // плитка сервера — не по фильтрам
       const parts = [{ cls: 'crit', label: 'просрочено', n: byK('crit') }, { cls: 'wait', label: 'ждёт вас', n: byK('wait') },
         { cls: 'ready', label: 'к проверке', n: byK('ready') }, { cls: 'warn', label: 'срок скоро', n: byK('warn') },
-        { cls: 'sig', label: 'сигналы', n: sigs.length }];
+        { cls: 'sig', label: 'сигналы', n: sigs.length + tileWhy }];
       const scale = Math.max(lim + 2, p1);
       const legend = ps => h('div', { class: 'leg' }, ps.filter(p => p.n).map(p => h('span', {}, h('i', { style: `background:var(--p-${COLOR[p.cls]})` }), `${p.label} ${p.n}`)));
-      kids.push(h('div', { class: 'meters' },
+      kids.push(h('div', { class: 'meters' + (data.server ? ' has-srv' : '') },
         h('div', { class: 'meter' }, h('div', { class: 'ml' }, h('span', { text: 'Нужно вам' })),
-          h('div', { class: 'mv', text: String(att.length + sigs.length) }), stack(parts), legend(parts)),
+          h('div', { class: 'mv', text: String(att.length + sigs.length + tileWhy) }), stack(parts), legend(parts)),
         h('div', { class: 'meter work' }, h('div', { class: 'ml' }, h('span', { text: 'Работа' }), h('span', { text: `в работе ${work}` })),
           h('div', { class: 'vr', title: 'P1 в работе, ждёт вас или утверждён; черта — лимит' }, h('span', { class: 'vk', text: 'P1' }),
             h('span', { class: 'vv' + (p1 > lim ? ' crit' : '') }, String(p1), h('small', { class: 'muted', text: ` / ${lim}` })),
@@ -306,6 +363,7 @@
           h('div', { class: 'vr' }, h('span', { class: 'vk', text: 'Бэклог' }), h('span', { class: 'vv', text: String(bl.length) }),
             stack([{ cls: 'stale', label: 'устарело', n: blStale }], bl.length), h('span', { class: 'muted vn', text: `устар. ${blStale}` })),
           h('div', { class: 'leg' }, h('span', { text: `без срока ${plans.filter(x => !x.due).length}` }))),
+        data.server ? serverTile(data.server, now) : null,
         data.servers ? servers(data.servers, now) : null));
 
       // разделы
@@ -316,7 +374,8 @@
       const sel = new Set(st.sel.filter(n => projects.some(p => p.n === n)));
       const inSel = n => !sel.size || sel.has(n);
       const tasksB = tasks.filter(x => inSel(x.p)), projectsB = projects.filter(p => inSel(p.n)),
-        sigsB = sigs.filter(x => inSel(x.p));
+        sigsB = sigs.filter(x => inSel(x.p)).concat(data.server ? data.server.why.map(w =>
+          ({ p: data.server.name, текст: w.text, уровень: w.kind, дата: String(data.server.checked || '').slice(0, 10) })) : []);
       const attB = tasksB.filter(x => x.reasons.some(r => ATT.includes(r.kind)));
       const partsB = [['crit', 'просрочено'], ['wait', 'ждёт вас'], ['ready', 'к проверке'], ['warn', 'срок скоро']]
         .map(([k, label]) => ({ label, n: attB.filter(x => primary(x).kind === k).length })).concat([{ label: 'сигналы', n: sigsB.length }]);

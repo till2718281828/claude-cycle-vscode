@@ -10,11 +10,13 @@
 - **Кнопки монитора**: общие (`пульт/команды.json` или `cycleWelcome.commandsFile`), проектные
   (`<проект>/_Служебное/команды.json`) и команды задач — вкладка Claude Code с набранным запросом или терминал в
   папке проекта; кавычки под PowerShell, cmd, bash/zsh, fish.
+- **Плитка сервера** (по `cycleWelcome.serverStatusFile`): диск, commit, ОЗУ по сеансам, тяжёлые процессы, аптайм, сбои,
+  бэкап, тренды 30 дней из JSON вашего монитора сервера; строки — в «Нужно вам». В демо — вымышленный сервер.
 - **Модуль серверов** (по умолчанию выключен): порты из `cycleWelcome.servers`, диск и память по `cycleWelcome.checkMachine`.
 - **Панель «Цикл-Про» в Explorer**; меню во вкладке — по `cycleWelcome.navInTab`.
 - Разделы: монитор, команды, цикл работы, контур данных (прежние «Репозитории», «Процесс периода», «Клавиши и правила»,
   «Требует внимания», «Пульт и документы» вошли в них; их id в проектных разделах по-прежнему понимаются).
-- Новые настройки: `pythonPath`, `personalProjects`, `hiddenProjects`, `p1Limit`, `thresholds`, `pipelines`,
+- Новые настройки: `serverStatusFile`, `pythonPath`, `personalProjects`, `hiddenProjects`, `p1Limit`, `thresholds`, `pipelines`,
   `commandsFile`, `servers`, `checkMachine`, `navInTab`.
 - Удалены: раздел «Требует внимания» по внешнему `пульт-сводка.json` и его контракт `docs/pult-summary.md`.
 - CI: тесты сборщика монитора (pytest) рядом с `node --test`.

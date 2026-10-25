@@ -195,3 +195,25 @@ def test_bad_cycle_block_is_data_error_not_crash(tmp_path):
     d = s.build(tmp_path, s.load_config(tmp_path, None))
     assert [e["kind"] for e in d["errors"]] == ["сбой"]
     assert d["projects"][0]["stage"]["name"] == "нет периода"
+
+
+def test_server_tile_on_demo(data):
+    v = data["server"]
+    assert (v["name"], v["disk"]["free_gb"], v["disk"]["level"], v["commit"]["pct"], v["commit"]["level"]) == ("VPS", 24.4, "ok", 87, "warn")
+    assert [w["text"] for w in v["why"]] == ["commit памяти 87 %", "ждёт перезагрузки после обновлений"]
+    assert v["level"] == "warn" and v["backup"]["last"] == "2026-11-15"
+    assert len(v["history"]["days"]) == 30 and v["history"]["disk_free_gb"].count(None) == 2
+    assert data["counts"]["attention"] == 8 + 2
+
+
+def test_server_tile_absent_or_broken(tmp_path):
+    (tmp_path / "П").mkdir()
+    assert s.build(tmp_path, s.load_config(tmp_path, None))["server"] is None
+    th = {**s.load_config(tmp_path, None), "сервер": {"файл": "нет.json"}}
+    assert s.build(tmp_path, th)["server"] is None
+    (tmp_path / "битый.json").write_text("{", encoding="utf-8")
+    d = s.build(tmp_path, {**th, "сервер": {"файл": "битый.json"}})
+    assert d["server"] is None and [e["kind"] for e in d["errors"]] == ["сбой"]
+    (tmp_path / "мало.json").write_text('{"диск": {}}', encoding="utf-8")
+    d = s.build(tmp_path, {**th, "сервер": {"файл": "мало.json", "пороги": {"disk_warn": 50}}})
+    assert d["server"] is None and d["errors"][0]["kind"] == "сбой"

@@ -32,7 +32,8 @@
         "cycleWelcome.servers",
         "cycleWelcome.pipelines",
         "cycleWelcome.checkMachine",
-        "cycleWelcome.commandsFile"
+        "cycleWelcome.commandsFile",
+        "cycleWelcome.serverStatusFile"
       ]
     }
   },
@@ -158,6 +159,11 @@
           "type": "boolean",
           "default": false,
           "description": "Показывать в блоке «Серверы» свободные диск (с папкой проектов) и ОЗУ этой машины."
+        },
+        "cycleWelcome.serverStatusFile": {
+          "type": "string",
+          "default": "",
+          "description": "Плитка сервера на мониторе: JSON состояния сервера (диск, commit, ОЗУ по сеансам, тяжёлые процессы, аптайм, сбои, бэкап, история за 30 дней), который пишет ваш монитор сервера. Формат — README; относительный путь — от папки проектов. Пусто — плитки нет."
         },
         "cycleWelcome.links": {
           "type": "array",
