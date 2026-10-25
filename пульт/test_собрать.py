@@ -16,7 +16,7 @@ DEMO = HERE.parent / "demo"
 
 @pytest.fixture(scope="module")
 def data():
-    return s.build(DEMO, s.load_config(DEMO, None))
+    return s.build(DEMO, s.load_config(DEMO, None, demo=True), demo=True)
 
 
 def proj(data, name):
@@ -172,6 +172,14 @@ def test_bad_conveyor_is_data_error(tmp_path):
         s.conveyors(proj, {"этапы": [["только название"]]})
     with pytest.raises(ValueError):
         s.conveyors(proj, {"папка": "../..", "этапы": [["а", ""]]})
+
+
+def test_demo_only_by_flag_or_builtin_folder(tmp_path):
+    assert s.is_demo(DEMO) and s.is_demo(tmp_path, True) and not s.is_demo(tmp_path)
+    (tmp_path / "Проект").mkdir()
+    (tmp_path / "_активность.json").write_text('{"сегодня": "2020-01-01"}', encoding="utf-8")
+    d = s.build(tmp_path, s.load_config(tmp_path, None), demo=s.is_demo(tmp_path))
+    assert d["demo"] is False and d["today"] != "2020-01-01"
 
 
 def test_write_outputs(tmp_path, data):

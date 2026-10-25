@@ -13,10 +13,11 @@ Claude Code (`~/.claude/projects` или `$CLAUDE_CONFIG_DIR/projects`), фай�
 Соглашение сигналов: автомат проекта сам пишет `<проект>/_Служебное/сигналы.json` — список
 `[{"текст", "уровень": ok|warn|crit, "дата"}]`. Монитор показывает warn и crit; ok и пустой список — тишина.
 
-Демо: если в папке проектов есть `_активность.json`, «сегодня», коммиты, сессии, даты движения планов и
-«незакоммичено» берутся из него, а настройки — из `_настройки.json` рядом (в демо нет .git).
+Демо (--demo или папка проектов — встроенная demo/): «сегодня», коммиты, сессии, даты движения планов и
+«незакоммичено» берутся из `_активность.json`, а настройки — из `_настройки.json` рядом (в демо нет .git).
 
-    python собрать.py --root ПАПКА --out ПАПКА_ВЫВОДА [--config НАСТРОЙКИ.json] [--today ГГГГ-ММ-ДД] [--quiet]
+    python собрать.py --root ПАПКА --out ПАПКА_ВЫВОДА [--config НАСТРОЙКИ.json] [--commands КОМАНДЫ.json]
+                      [--demo] [--today ГГГГ-ММ-ДД] [--quiet]
 """
 import argparse
 import datetime as dt
@@ -48,7 +49,13 @@ def load_json(f: Path):
         return None
 
 
-def load_config(root: Path, config):
+def is_demo(root: Path, flag=False):
+    """Демо — по ключу --demo или если папка проектов — встроенная demo/; файл _активность.json в чужой папке
+    демо не включает."""
+    return bool(flag) or root.resolve() == (HERE.parent / "demo").resolve()
+
+
+def load_config(root: Path, config, demo=False):
     """Пороги по умолчанию (пороги.json) поверх — настройки демо или пользователя (--config)."""
     th = json.loads(read(HERE / "пороги.json"))
     if config:
@@ -56,7 +63,7 @@ def load_config(root: Path, config):
         if not isinstance(over, dict):
             raise SystemExit(f"Настройки монитора не прочитаны: {config}")
     else:
-        over = load_json(root / DEMO_SETTINGS) if (root / DEMO_FILE).exists() else None
+        over = load_json(root / DEMO_SETTINGS) if demo else None
     if isinstance(over, dict):
         th.update(over)
     return th
@@ -565,9 +572,9 @@ def count(projects, tasks, th):
     }
 
 
-def build(root: Path, th: dict, today: dt.date = None, *, git=None, commands=None, claude_projects=None):
+def build(root: Path, th: dict, today: dt.date = None, *, demo=False, git=None, commands=None, claude_projects=None):
     """Данные пульта v2 (контракт — комментарий в начале пульт/пульт.js)."""
-    demo = load_json(root / DEMO_FILE)
+    demo = load_json(root / DEMO_FILE) if demo else None
     demo = demo if isinstance(demo, dict) else None
     if demo:
         today = today or date_or_none(demo.get("сегодня"))
@@ -656,12 +663,14 @@ def main():
     ap.add_argument("--out", required=True, help="папка для пульт-данные.json и пульт.html")
     ap.add_argument("--config", default=None, help="JSON с настройками монитора поверх пороги.json")
     ap.add_argument("--commands", default=None, help="JSON с общими командами вместо пульт/команды.json")
+    ap.add_argument("--demo", action="store_true", help="папка проектов — демо (_активность.json, _настройки.json)")
     ap.add_argument("--today", default=None)
     ap.add_argument("--quiet", action="store_true")
     a = ap.parse_args()
 
     root = Path(a.root)
-    data = build(root, load_config(root, a.config), date_or_none(a.today), commands=a.commands)
+    demo = is_demo(root, a.demo)
+    data = build(root, load_config(root, a.config, demo), date_or_none(a.today), demo=demo, commands=a.commands)
     write(Path(a.out), data)
     if not a.quiet:
         print(f"Монитор: {a.out} · проектов {len(data['projects'])}, задач {len(data['tasks'])}, "
@@ -669,6 +678,8 @@ def main():
 
 
 if __name__ == "__main__":
+    if sys.version_info < (3, 10):
+        sys.exit("Монитору нужен Python 3.10 или новее, запущен " + sys.version.split()[0])
     try:
         sys.stdout.reconfigure(encoding="utf-8")
     except Exception:

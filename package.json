@@ -23,8 +23,17 @@
   "capabilities": {
     "untrustedWorkspaces": {
       "supported": "limited",
-      "description": "В режиме ограниченного доступа настройки путей и проектных разделов берутся только из пользовательских настроек, не из папки проекта.",
-      "restrictedConfigurations": ["cycleWelcome.projectSections", "cycleWelcome.projectsRoot", "cycleWelcome.links"]
+      "description": "В режиме ограниченного доступа пути, Python, серверы и проектные разделы берутся только из пользовательских настроек, не из папки проекта.",
+      "restrictedConfigurations": [
+        "cycleWelcome.projectSections",
+        "cycleWelcome.projectsRoot",
+        "cycleWelcome.links",
+        "cycleWelcome.pythonPath",
+        "cycleWelcome.servers",
+        "cycleWelcome.pipelines",
+        "cycleWelcome.checkMachine",
+        "cycleWelcome.commandsFile"
+      ]
     }
   },
   "activationEvents": [
@@ -35,36 +44,120 @@
     "commands": [
       {
         "command": "cycleWelcome.show",
-        "title": "Цикл: памятка"
+        "title": "Цикл-Про: открыть"
       },
       {
         "command": "cycleWelcome.openDashboard",
-        "title": "Цикл: открыть пульт"
+        "title": "Цикл-Про: монитор в браузере"
+      },
+      {
+        "command": "cycleWelcome.rebuildPult",
+        "title": "Цикл-Про: пересобрать монитор"
+      },
+      {
+        "command": "cycleWelcome.openReadme",
+        "title": "Цикл-Про: README"
       },
       {
         "command": "cycleWelcome.openRepos",
-        "title": "Цикл: карта репозиториев"
+        "title": "Цикл-Про: карта репозиториев"
+      },
+      {
+        "command": "cycleWelcome.goStep",
+        "title": "Цикл-Про: открыть раздел"
       }
     ],
     "configuration": {
-      "title": "Цикл работы",
+      "title": "Цикл-Про",
       "properties": {
         "cycleWelcome.showOnStartup": {
           "type": "boolean",
           "default": true,
-          "description": "Открывать вкладку «Цикл работы» в каждом новом окне VS Code."
+          "description": "Открывать вкладку «Цикл-Про» в каждом новом окне VS Code."
         },
-        "cycleWelcome.projectSections": {
-          "type": "array",
-          "items": { "type": "string" },
-          "default": [],
-          "scope": "window",
-          "description": "Проектные разделы вкладки: пути к JSON-описаниям разделов от папки файла workspace. Читается только из настроек .code-workspace; формат — README репозитория claude-cycle-vscode."
+        "cycleWelcome.navInTab": {
+          "type": "boolean",
+          "default": false,
+          "description": "Показывать меню разделов слева во вкладке. По умолчанию разделы — в панели «Цикл-Про» в Explorer, а вкладка целиком отдана содержимому."
         },
         "cycleWelcome.projectsRoot": {
           "type": "string",
           "default": "",
-          "description": "Папка проектов: там лежат пульт.html и пульт-сводка.json; от неё считаются относительные пути своих ссылок. Пусто — пульта нет, в «Требует внимания» — демо."
+          "description": "Папка проектов для монитора: в ней папки проектов с CLAUDE.md, планами и бэклогом. Пусто — монитор показывает встроенное демо СтальКонструкт-Демо; от этой же папки считаются относительные пути своих ссылок."
+        },
+        "cycleWelcome.pythonPath": {
+          "type": "string",
+          "default": "",
+          "description": "Python 3.10+ для сборщика монитора. Пусто — python на Windows, python3 на macOS и Linux."
+        },
+        "cycleWelcome.personalProjects": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Личные проекты (имена папок): на мониторе скрыты, пока не включена кнопка «Личные»."
+        },
+        "cycleWelcome.hiddenProjects": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Папки в папке проектов, которые монитор не показывает. Папки на «.» и «_» скрыты всегда."
+        },
+        "cycleWelcome.p1Limit": {
+          "type": "integer",
+          "default": 5,
+          "minimum": 1,
+          "description": "Лимит задач P1 в работе: выше — красное число в шкале «Работа»."
+        },
+        "cycleWelcome.thresholds": {
+          "type": "object",
+          "default": {},
+          "description": "Пороги монитора в днях, любые из: в_работе_дней (7), ждёт_вас_дней (2), утверждён_не_начат_дней (7), бэклог_P1_P2_дней (14), бэклог_P3_дней (90), срок_скоро_дней (7)."
+        },
+        "cycleWelcome.pipelines": {
+          "type": "object",
+          "default": {},
+          "description": "Конвейеры периодов: {\"<проект>\": {\"папка\": \"Периоды\", \"этапы\": [[\"<этап>\", \"<маска файла в папке периода>\"], …]}}. Период — подпапка ГГГГ-ММ; этап пройден, если есть файл по маске. Формат — README."
+        },
+        "cycleWelcome.commandsFile": {
+          "type": "string",
+          "default": "",
+          "description": "Свои общие кнопки монитора: JSON-список [{\"id\", \"название\", \"запрос\", \"подтвердить\"?, \"подсказка\"?}] вместо встроенных (/code-review, /simplify, «Что в работе»). Относительный путь — от папки проектов."
+        },
+        "cycleWelcome.servers": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "host": {
+                "type": "string"
+              },
+              "port": {
+                "type": "integer"
+              },
+              "purpose": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "host",
+              "port"
+            ]
+          },
+          "description": "Серверы, порты которых монитор проверяет TCP-подключением (2 с): [{\"name\", \"host\", \"port\", \"purpose\"}]. Пусто — блока «Серверы» нет."
+        },
+        "cycleWelcome.checkMachine": {
+          "type": "boolean",
+          "default": false,
+          "description": "Показывать в блоке «Серверы» свободные диск (с папкой проектов) и ОЗУ этой машины."
         },
         "cycleWelcome.links": {
           "type": "array",
@@ -72,14 +165,49 @@
           "items": {
             "type": "object",
             "properties": {
-              "title": { "type": "string", "description": "Название ссылки на вкладке." },
-              "path": { "type": "string", "description": "Абсолютный путь или путь от папки проектов. Markdown открывается в предпросмотре." }
+              "title": {
+                "type": "string",
+                "description": "Название ссылки на вкладке."
+              },
+              "path": {
+                "type": "string",
+                "description": "Абсолютный путь или путь от папки проектов. Markdown открывается в предпросмотре."
+              }
             },
-            "required": ["title", "path"]
+            "required": [
+              "title",
+              "path"
+            ]
           },
-          "description": "Свои документы в разделе «Пульт и документы»: список {\"title\", \"path\"}. Пусто — только встроенные ссылки."
+          "description": "Свои документы в разделе «Команды»: список {\"title\", \"path\"}. Пусто — только встроенные ссылки."
+        },
+        "cycleWelcome.projectSections": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "scope": "window",
+          "description": "Проектные разделы вкладки: пути к JSON-описаниям разделов от папки файла workspace. Читается только из настроек .code-workspace; формат — README репозитория claude-cycle-vscode."
         }
       }
+    },
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "cycleWelcome.goStep",
+          "when": "false"
+        }
+      ]
+    },
+    "views": {
+      "explorer": [
+        {
+          "id": "cycleWelcome.sections",
+          "name": "Цикл-Про",
+          "icon": "$(dashboard)"
+        }
+      ]
     }
   }
 }
