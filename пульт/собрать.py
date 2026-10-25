@@ -419,7 +419,7 @@ def lead_rank(x):
     return kind, PRIORITY.get(x["pr"], 9)
 
 
-def lead_and_stage(P, mine, cfg, verified):
+def lead_and_stage(P, mine, cfg, verified, errors=None):
     """«Сейчас», фаза схемы «Цикл работы» и этап проекта по профилю."""
     plans = [x for x in mine if x["st"] not in ("бэклог", "отложен")]
     lead = min(plans, key=lead_rank) if plans else None
@@ -437,7 +437,7 @@ def lead_and_stage(P, mine, cfg, verified):
         P["now"] = {"kind": "quiet", "text": "тихо", "task": None}
         P["phase"] = None
     if P["prof"] == "A":
-        pi = period_info(Path(P["path"]), cfg)
+        pi = guarded(errors if errors is not None else [], P["n"], P["path"], "период", lambda: period_info(Path(P["path"]), cfg), None)
         if pi:
             P["stage"] = {"lane": "A", "name": "выгрузки" if pi["have"] < pi["need"] else "расчёт",
                           "detail": f"{pi['period']} · {pi['have']}/{pi['need']}"}
@@ -625,7 +625,7 @@ def build(root: Path, th: dict, today: dt.date = None, *, demo=False, git=None, 
     for P in projects:
         mine = [x for x in tasks if x["p"] == P["n"]]
         health(P, mine)
-        lead_and_stage(P, mine, cfgs.get(P["n"]), verified)
+        lead_and_stage(P, mine, cfgs.get(P["n"]), verified, errors)
         spec = th.get("конвейеры", {}).get(P["n"])
         P["conveyors"] = guarded(errors, P["n"], P["path"], "конвейер", lambda: conveyors(Path(P["path"]), spec), [])
     return {"v": 2, "generated": dt.datetime.now().strftime("%Y-%m-%d %H:%M"), "today": today.isoformat(),

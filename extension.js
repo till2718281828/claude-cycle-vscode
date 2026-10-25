@@ -166,7 +166,7 @@ function rebuildPult() {
 function rebuildIfStale() {
   if (autoFailed) return;
   const data = pultData(), r = корень();
-  if (!data || data.root !== r.путь || (!data.demo && data.today !== todayIso())) rebuildPult();
+  if (!data || path.resolve(data.root || "") !== path.resolve(r.путь) || (!data.demo && data.today !== todayIso())) rebuildPult();
 }
 
 // Файл данных сменился (пересборка кнопкой или из другого окна) — вкладка перерисовывает монитор без перезагрузки.

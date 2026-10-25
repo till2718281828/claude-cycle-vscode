@@ -64,7 +64,7 @@ function файлы(dir) {
 
 test('в репозитории нет личных путей', () => {
   const найдено = [];
-  for (const f of файлы(корень).filter(f => !/\.(png|vsix|pyc)$/i.test(f))) {
+  for (const f of файлы(корень).filter(f => !/\.(png|vsix)$/i.test(f))) {
     const t = fs.readFileSync(f, 'utf8');
     for (const re of ЛИЧНОЕ) if (re.test(t)) найдено.push(`${path.relative(корень, f)}: ${re}`);
   }

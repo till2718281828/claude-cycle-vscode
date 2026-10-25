@@ -185,3 +185,13 @@ def test_demo_only_by_flag_or_builtin_folder(tmp_path):
 def test_write_outputs(tmp_path, data):
     s.write(tmp_path, data)
     assert json.loads((tmp_path / "пульт-данные.json").read_text(encoding="utf-8"))["today"] == "2026-11-16"
+
+
+def test_bad_cycle_block_is_data_error_not_crash(tmp_path):
+    proj = tmp_path / "А-проект"
+    (proj / "Периоды").mkdir(parents=True)
+    (proj / "CLAUDE.md").write_text("# А\n\n## Цикл\n\n```yaml\nпрофиль: A\nвыгрузки: Выгрузки/{период}\n"
+                                    "период_файл: Периоды\n```\n", encoding="utf-8")
+    d = s.build(tmp_path, s.load_config(tmp_path, None))
+    assert [e["kind"] for e in d["errors"]] == ["сбой"]
+    assert d["projects"][0]["stage"]["name"] == "нет периода"
