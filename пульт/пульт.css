@@ -385,11 +385,8 @@
 /* плитка сервера (настройка «сервер») — третья колонка шкал */
 .pult .meters.has-srv { grid-template-columns: minmax(170px, 1fr) minmax(260px, 1.5fr) minmax(400px, 2.2fr); }
 @media (max-width: 1100px) { .pult .meters.has-srv { grid-template-columns: minmax(170px, 1fr) minmax(260px, 1.5fr); } }
-.pult .meter.srv { grid-column: span 2; display: grid; gap: 3px; }
-.pult .meter.srv.lv-crit { border-color: var(--p-red); }
+.pult .meter.srv { grid-column: auto; display: grid; gap: 3px; }
 .pult .meter.srv .leg { align-items: center; gap: 2px 12px; }
-.pult .meter.srv .leg .btn { margin-left: auto; }
-.pult .meter.srv { grid-column: auto; }
 .pult .meter.srv .stack { margin-top: 0; }
 .pult .meter.srv .leg { flex-wrap: nowrap; white-space: nowrap; overflow: hidden; }
 .pult .meter.srv { border: 1px solid var(--p-line); }

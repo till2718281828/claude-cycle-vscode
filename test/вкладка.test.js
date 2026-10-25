@@ -47,7 +47,7 @@ test('без настроек — демо и ничего личного: пу�
 
 test('в режиме ограниченного доступа пути, Python и серверы — только пользовательские', () => {
   const ограничены = new Set(pkg.capabilities.untrustedWorkspaces.restrictedConfigurations);
-  for (const k of ['projectsRoot', 'links', 'projectSections', 'pythonPath', 'servers', 'pipelines']) {
+  for (const k of ['projectsRoot', 'links', 'projectSections', 'pythonPath', 'servers', 'pipelines', 'serverStatusFile', 'commandsFile']) {
     assert.ok(ограничены.has('cycleWelcome.' + k), k);
   }
   for (const k of ограничены) assert.ok(props[k], `${k} не объявлена`);

@@ -237,34 +237,42 @@
     const d = pts.reduce((a, q, i) => q ? a + (a && pts[i - 1] ? 'L' : 'M') + q[0].toFixed(1) + ' ' + q[1].toFixed(1) : a, '');
     return sv('svg', { class: 'spk', viewBox: `0 0 ${w} 16`, preserveAspectRatio: 'none' }, sv('path', { d, fill: 'none', stroke: 'var(--p-blue)', 'stroke-width': 1.5 }));
   }
+  // Обязательны только диск.свободно_гб и commit.процент (README): чего нет в файле — того нет и на плитке.
   function serverTile(v, now) {
-    const T = v.thresholds, upd = Math.round((new Date(v.checked) - new Date(v.boot)) / 86400000 * 10) / 10;   // аптайм на момент замера
-    const min = Math.round((now - new Date(v.checked)) / 60000);
-    const used = v.disk.total_gb - v.disk.free_gb;
+    const T = v.thresholds, num = x => typeof x === 'number' && isFinite(x);
+    const boot = v.boot && v.checked ? new Date(v.checked) - new Date(v.boot) : NaN;
+    const upd = num(boot) && boot >= 0 ? Math.round(boot / 86400000 * 10) / 10 : null;   // аптайм на момент замера
+    const min = v.checked ? Math.round((now - new Date(v.checked)) / 60000) : NaN;
+    const dt = v.disk.total_gb, used = num(dt) ? dt - v.disk.free_gb : null;
+    const memTxt = num(v.commit.used_gb) && num(v.commit.total_gb) ? ` · ${gb(v.commit.used_gb)}/${gb(v.commit.total_gb)}` : '';
+    const rt = num(v.ram.total_gb) ? v.ram.total_gb : null;
+    const top = (v.top || []).filter(x => num(x.gb)).slice(0, 3);
     return h('div', { class: 'meter srv lv-' + v.level, title: v.file },
       h('div', { class: 'ml' }, h('span', {}, dot(v.level === 'ok' ? 'ok' : v.level, v.level), ' ' + v.name),
-        h('span', { text: `замер ${String(v.checked).slice(11, 16)}` + (min >= 0 && min < 1440 ? ` · ${min} мин назад` : '') + '' })),
+        v.checked ? h('span', { text: `замер ${String(v.checked).slice(11, 16)}` + (min >= 0 && min < 1440 ? ` · ${min} мин назад` : '') }) : null),
       h('div', { class: 'vr' }, h('span', { class: 'vk', text: v.disk.mark ? 'Диск ' + v.disk.mark : 'Диск' }),
         h('span', { class: 'vv' + (v.disk.level !== 'ok' ? ' ' + v.disk.level : ''), text: `${gb(v.disk.free_gb)} ГБ своб.` }),
-        srvBar(used, v.disk.total_gb, [v.disk.total_gb - T.disk_warn, v.disk.total_gb - T.disk_crit], v.disk.level,
-          `занято ${gb(used.toFixed(1))} из ${gb(v.disk.total_gb)} ГБ; черты — свободно ${T.disk_warn} и ${T.disk_crit} ГБ`),
-        spark(v.history && v.history.disk_free_gb, 0, v.disk.total_gb / 4, v.history && v.history.days)),
+        used != null ? srvBar(used, dt, [dt - T.disk_warn, dt - T.disk_crit], v.disk.level,
+          `занято ${gb(used.toFixed(1))} из ${gb(dt)} ГБ; черты — свободно ${T.disk_warn} и ${T.disk_crit} ГБ`) : h('span'),
+        spark(v.history && v.history.disk_free_gb, 0, num(dt) ? dt / 4 : Math.max(...((v.history && v.history.disk_free_gb) || [1]).filter(num), 1), v.history && v.history.days)),
       h('div', { class: 'vr' }, h('span', { class: 'vk', text: 'Commit' }),
-        h('span', { class: 'vv' + (v.commit.level !== 'ok' ? ' ' + v.commit.level : ''), text: `${v.commit.pct} % · ${gb(v.commit.used_gb)}/${gb(v.commit.total_gb)}` }),
+        h('span', { class: 'vv' + (v.commit.level !== 'ok' ? ' ' + v.commit.level : ''), text: `${v.commit.pct} %${memTxt}` }),
         srvBar(v.commit.pct, 100, [T.commit_warn, T.commit_crit], v.commit.level,
           `занятая виртуальная память ${v.commit.pct} %; черты — ${T.commit_warn} и ${T.commit_crit} %: выше 90 % приложения получают отказ`),
         spark(v.history && v.history.commit_pct, 0, 100, v.history && v.history.days)),
-      h('div', { class: 'vr' }, h('span', { class: 'vk', text: 'ОЗУ' }),
-        // сеансов нет (все вышли, замер монитора пришёлся на это время) — свободная память вместо пустой строки
-        h('span', { class: 'vv', text: v.sessions.length ? v.sessions.map(x => `${x.user} ${gb(x.gb)}`).join(' · ') + ' ГБ'
-          : `своб. ${gb(v.ram.free_gb)} ГБ · сеансов нет`, title: v.sessions.length ? null : 'на момент замера никто не был в системе' }),
-        stack(v.sessions.map((x, i) => ({ cls: 'u' + i, label: x.user, n: x.gb })), v.ram.total_gb),
-        h('span', { class: 'muted spk0', text: `из ${gb(v.ram.total_gb)} ГБ` })),
+      v.sessions.length || num(v.ram.free_gb) ? h('div', { class: 'vr' }, h('span', { class: 'vk', text: 'ОЗУ' }),
+        // сеансов нет (все вышли, замер пришёлся на это время) — свободная память вместо пустой строки
+        h('span', { class: 'vv', title: v.sessions.length ? v.sessions.map(x => `${x.user} ${gb(x.gb)} ГБ`).join('\n') : 'на момент замера никто не был в системе',
+          text: v.sessions.length ? v.sessions.map(x => `${x.user} ${gb(x.gb)}`).join(' · ') + ' ГБ' : `своб. ${gb(v.ram.free_gb)} ГБ · сеансов нет` }),
+        rt ? stack(v.sessions.map((x, i) => ({ cls: 'u' + i, label: x.user, n: x.gb })), rt) : h('span'),
+        h('span', { class: 'muted spk0', text: rt ? `из ${gb(rt)} ГБ` : '' })) : null,
       h('div', { class: 'leg' },
-        h('span', { text: `аптайм ${gb(upd)} дн.` }),
+        upd != null ? h('span', { text: `аптайм ${gb(upd)} дн.` }) : null,
         h('span', { class: v.reboot_pending ? 'warn' : '', text: v.reboot_pending ? 'ждёт перезагрузки' : 'перезагрузка не нужна', title: 'после обновлений системы' }),
         h('span', { class: v.crashes_14d ? 'warn' : '', text: `аварийных за 14 дн.: ${v.crashes_14d}` }),
-        h('span', { class: v.backup.level === 'crit' ? 'crit' : '', text: v.backup.last ? `бэкап ${dm(v.backup.last)}` : 'бэкапа нет' })));
+        h('span', { class: v.backup.level === 'crit' ? 'crit' : '', text: v.backup.last ? `бэкап ${dm(v.backup.last)}` : 'бэкапа нет' }),
+        top.length ? h('span', { title: 'тяжёлые процессы: имя, число экземпляров, память',
+          text: 'топ: ' + top.map(x => `${x.name}${x.n > 1 ? '×' + x.n : ''} ${gb(x.gb)}`).join(' · ') + ' ГБ' }) : null));
   }
 
   // Доска «Портфель»: дорожки по профилю и этапу (решения пользователя на СТОП 1).
